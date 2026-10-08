@@ -1,0 +1,81 @@
+# Course catalog and scraper config.
+#
+# booking_url and params are intentionally empty. Real booking URLs and
+# platform request settings get filled in after each site is inspected.
+# Do not guess them.
+#
+# platform:
+#   example_platform — shared booking platform. One spider will loop every
+#     course with this value. Rename the platform id once the real one is known.
+#   custom — bespoke site. Later phase adds spiders/custom_<id>.py.
+#
+# `id` is the stable slug stored on courses.slug. `params` is read by spiders
+# from this file and is not a database column.
+
+courses:
+  - id: stub-north
+    name: Stub Course North
+    address: null
+    lat: null
+    lng: null
+    holes_options: [9, 18]
+    platform: example_platform
+    timezone: America/Los_Angeles
+    booking_url: null
+    # TODO: platform request settings, e.g. club_id, after inspecting the site.
+    params: {}
+
+  - id: stub-south
+    name: Stub Course South
+    address: null
+    lat: null
+    lng: null
+    holes_options: [18]
+    platform: example_platform
+    timezone: America/Los_Angeles
+    booking_url: null
+    params: {}
+
+  - id: stub-east
+    name: Stub Course East
+    address: null
+    lat: null
+    lng: null
+    holes_options: [9, 18]
+    platform: example_platform
+    timezone: America/Los_Angeles
+    booking_url: null
+    params: {}
+
+  - id: stub-west
+    name: Stub Course West
+    address: null
+    lat: null
+    lng: null
+    holes_options: [9]
+    platform: example_platform
+    timezone: America/Los_Angeles
+    booking_url: null
+    params: {}
+
+  - id: stub-ridge
+    name: Stub Course Ridge
+    address: null
+    lat: null
+    lng: null
+    holes_options: [9, 18]
+    platform: custom
+    timezone: America/Los_Angeles
+    booking_url: null
+    params: {}
+
+  - id: stub-lake
+    name: Stub Course Lake
+    address: null
+    lat: null
+    lng: null
+    holes_options: [18]
+    platform: custom
+    timezone: America/Los_Angeles
+    booking_url: null
+    params: {}

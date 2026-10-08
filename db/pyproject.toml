@@ -1,0 +1,28 @@
+[project]
+name = "golfdb"
+version = "0.1.0"
+description = "Shared Postgres models, migrations, and course seed for the tee time aggregator."
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.13",
+    "psycopg[binary]>=3.2",
+    "pydantic>=2.6",
+    "pyyaml>=6.0",
+    "sqlalchemy>=2.0.30",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
