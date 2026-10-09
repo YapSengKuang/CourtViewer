@@ -10,7 +10,7 @@ Booking is not handled here. Each result will deep-link to the course's own book
 | --- | --- |
 | `db/` | SQLAlchemy models, Alembic migrations, course seed. Shared by the scraper and the API. |
 | `scraper/` | Scrapy spiders. `example_platform` is a fixture stub; other spiders come later. |
-| `api/` | FastAPI app. Routes come in a later phase. |
+| `api/` | FastAPI search. Reads Postgres only. |
 | `web/` | Next.js app. UI comes in a later phase. |
 
 `db/` sits beside the three app directories because both the scraper and the API use the same schema.
@@ -35,6 +35,15 @@ uv pip install -e "./scraper[dev]"
 cd scraper && scrapy crawl example_platform
 ```
 
+## Phase 3
+
+Search never triggers a scrape. `GET /api/tee-times` filters in each course's timezone, keeps rows with enough open spots, and drops anything scraped more than 60 minutes ago. Default sort is start time; `sort=price` sorts by price per player. `GET /api/courses` and `GET /api/health` list the catalog and each course's last successful scrape.
+
+```bash
+uv pip install -e "./api[dev]"
+uvicorn tee_api.main:app --reload --port 8000
+```
+
 ## Local setup
 
 Requires Python 3.11+ and Docker. macOS `/usr/bin/python3` is often 3.9, which is too old. [uv](https://docs.astral.sh/uv/) can download 3.12 without a Homebrew build:
@@ -42,7 +51,7 @@ Requires Python 3.11+ and Docker. macOS `/usr/bin/python3` is often 3.9, which i
 ```bash
 uv venv --python 3.12 .venv
 source .venv/bin/activate
-uv pip install -e "./db[dev]" -e "./scraper[dev]"
+uv pip install -e "./db[dev]" -e "./scraper[dev]" -e "./api[dev]"
 
 cp .env.example .env   # optional; defaults match this file
 docker compose up -d
@@ -50,9 +59,9 @@ alembic -c db/alembic.ini upgrade head
 python -m golfdb.seed
 ```
 
-If `python3.12` is already on your PATH, `python3.12 -m venv .venv` and `pip install -e "./db[dev]" -e "./scraper[dev]"` work the same way.
+If `python3.12` is already on your PATH, `python3.12 -m venv .venv` and `pip install -e "./db[dev]" -e "./scraper[dev]" -e "./api[dev]"` work the same way.
 
-`make up`, `make migrate`, `make seed`, `make test`, and `make crawl` wrap the same commands. Activate the virtualenv first.
+`make up`, `make migrate`, `make seed`, `make test`, `make crawl`, and `make api` wrap the same commands. Activate the virtualenv first.
 
 Postgres listens on `localhost:5432` as database `teetimes`, user `golf`, password `golf`.
 
@@ -61,6 +70,7 @@ Postgres listens on `localhost:5432` as database `teetimes`, user `golf`, passwo
 ```bash
 cd db && pytest
 cd scraper && pytest
+cd api && pytest
 ```
 
-Catalog and parser tests always run. Schema, seed, pipeline, and crawl tests talk to Postgres and skip if it is not up.
+Catalog, parser, and request-validation tests always run. Schema, seed, pipeline, crawl, and search tests talk to Postgres and skip if it is not up.

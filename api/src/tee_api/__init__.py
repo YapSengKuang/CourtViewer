@@ -1,1 +1,1 @@
-"""HTTP API. Endpoints are added in a later phase; this package marks the scaffold."""
+"""HTTP API. Search reads Postgres and never starts a scrape."""
