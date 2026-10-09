@@ -18,7 +18,7 @@ test:
 	cd api && pytest
 
 crawl:
-	cd scraper && scrapy crawl example_platform
+	python -m golf_scraper.run_all
 
 api:
 	uvicorn tee_api.main:app --reload --port 8000

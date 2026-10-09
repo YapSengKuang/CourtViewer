@@ -56,6 +56,12 @@ cd web && npm run dev
 
 The page calls `http://localhost:8000` unless `NEXT_PUBLIC_API_URL` is set.
 
+## Phase 5
+
+`python -m golf_scraper.run_all` runs each spider in its own process, so one failure does not stop the rest. `scraper/crontab.example` schedules that every 15 minutes. Install it only after editing the absolute path. The same command is what a later Celery beat or Prefect job would call.
+
+`GET /api/health` is the per-course freshness check the page uses for "Updated X min ago".
+
 ## Local setup
 
 Requires Python 3.11+ and Docker. macOS `/usr/bin/python3` is often 3.9, which is too old. [uv](https://docs.astral.sh/uv/) can download 3.12 without a Homebrew build:

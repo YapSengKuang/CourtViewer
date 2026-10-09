@@ -1,0 +1,5 @@
+# Refresh tee times every 15 minutes.
+# Edit the path, then install with: crontab scraper/crontab.example
+# One failing spider does not stop the others. This command can later move to
+# Celery beat or Prefect without changing the spiders.
+*/15 * * * * cd /ABSOLUTE/PATH/Court\ Booker && .venv/bin/python -m golf_scraper.run_all
