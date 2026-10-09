@@ -66,13 +66,13 @@ def search_tee_times(
     date: date,
     time_from: time,
     time_to: time,
-    holes: int,
+    holes: int | None = None,
     players: int = Query(..., ge=1),
     sort: Literal["starts_at", "price"] = "starts_at",
     session: Session = Depends(get_session),
     now: datetime = Depends(get_now),
 ) -> TeeTimeList:
-    if holes not in (9, 18):
+    if holes is not None and holes not in (9, 18):
         raise HTTPException(status_code=422, detail="holes must be 9 or 18")
     if time_from > time_to:
         raise HTTPException(status_code=422, detail="time_from must be at or before time_to")
@@ -96,11 +96,12 @@ def search_tee_times(
     statement = (
         select(TeeTime, Course)
         .join(Course, Course.id == TeeTime.course_id)
-        .where(TeeTime.holes == holes)
         .where(TeeTime.spots_available >= players)
         .where(TeeTime.scraped_at >= fresh_after)
         .where(or_(*windows))
     )
+    if holes is not None:
+        statement = statement.where(TeeTime.holes == holes)
     if sort == "price":
         statement = statement.order_by(
             TeeTime.price_per_player,
@@ -116,6 +117,7 @@ def search_tee_times(
         zone = ZoneInfo(course.timezone)
         tee_times.append(
             TeeTimeOut(
+                course_slug=course.slug,
                 course_name=course.name,
                 address=course.address,
                 lat=course.lat,

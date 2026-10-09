@@ -6,7 +6,7 @@ from tee_api.routes import router
 app = FastAPI(title="Tee time search", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001"],
     allow_methods=["GET"],
     allow_headers=["*"],
 )

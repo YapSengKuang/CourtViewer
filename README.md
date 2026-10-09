@@ -11,7 +11,7 @@ Booking is not handled here. Each result will deep-link to the course's own book
 | `db/` | SQLAlchemy models, Alembic migrations, course seed. Shared by the scraper and the API. |
 | `scraper/` | Scrapy spiders. `example_platform` is a fixture stub; other spiders come later. |
 | `api/` | FastAPI search. Reads Postgres only. |
-| `web/` | Next.js app. UI comes in a later phase. |
+| `web/` | Next.js search page. |
 
 `db/` sits beside the three app directories because both the scraper and the API use the same schema.
 
@@ -44,6 +44,18 @@ uv pip install -e "./api[dev]"
 uvicorn tee_api.main:app --reload --port 8000
 ```
 
+Omit `holes` to search both 9- and 18-hole times.
+
+## Phase 4
+
+The search page at `web/` asks for a date, time window, holes (9, 18, or any), and a player count. Cards show the course, location, holes, price per player, local start time, spots left, how long ago that course last scraped successfully, and a Book link that opens the course booking URL in a new tab. Sort by time or price. The page has a loading state and an empty state.
+
+```bash
+cd web && npm run dev
+```
+
+The page calls `http://localhost:8000` unless `NEXT_PUBLIC_API_URL` is set.
+
 ## Local setup
 
 Requires Python 3.11+ and Docker. macOS `/usr/bin/python3` is often 3.9, which is too old. [uv](https://docs.astral.sh/uv/) can download 3.12 without a Homebrew build:
@@ -61,7 +73,7 @@ python -m golfdb.seed
 
 If `python3.12` is already on your PATH, `python3.12 -m venv .venv` and `pip install -e "./db[dev]" -e "./scraper[dev]" -e "./api[dev]"` work the same way.
 
-`make up`, `make migrate`, `make seed`, `make test`, `make crawl`, and `make api` wrap the same commands. Activate the virtualenv first.
+`make up`, `make migrate`, `make seed`, `make test`, `make crawl`, `make api`, and `make web` wrap the same commands. Activate the virtualenv first.
 
 Postgres listens on `localhost:5432` as database `teetimes`, user `golf`, password `golf`.
 

@@ -21,6 +21,7 @@ class CourseList(BaseModel):
 
 
 class TeeTimeOut(BaseModel):
+    course_slug: str
     course_name: str
     address: str | None
     lat: float | None

@@ -96,6 +96,16 @@ def test_search_uses_each_course_timezone_and_freshness(client, postgres, frozen
             Decimal("40.00"),
             Decimal("72.00"),
         ]
+        assert north["course_slug"] == "stub-north"
+
+        any_holes = {**SEARCH}
+        del any_holes["holes"]
+        mixed = client.get("/api/tee-times", params=any_holes)
+        assert {(row["course_slug"], row["holes"]) for row in mixed.json()["tee_times"]} == {
+            ("stub-south", 18),
+            ("stub-north", 18),
+            ("stub-north", 9),
+        }
     finally:
         _cleanup(factory)
         _set_timezone(factory, "stub-south", "America/Los_Angeles")

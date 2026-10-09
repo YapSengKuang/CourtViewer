@@ -1,4 +1,4 @@
-.PHONY: up down migrate seed test crawl api
+.PHONY: up down migrate seed test crawl api web
 
 up:
 	docker compose up -d
@@ -22,3 +22,6 @@ crawl:
 
 api:
 	uvicorn tee_api.main:app --reload --port 8000
+
+web:
+	cd web && npm run dev
