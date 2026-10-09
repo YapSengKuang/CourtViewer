@@ -1,4 +1,4 @@
-.PHONY: up down migrate seed test
+.PHONY: up down migrate seed test crawl
 
 up:
 	docker compose up -d
@@ -14,3 +14,7 @@ seed:
 
 test:
 	cd db && pytest
+	cd scraper && pytest
+
+crawl:
+	cd scraper && scrapy crawl example_platform

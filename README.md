@@ -9,13 +9,13 @@ Booking is not handled here. Each result will deep-link to the course's own book
 | Path | Role |
 | --- | --- |
 | `db/` | SQLAlchemy models, Alembic migrations, course seed. Shared by the scraper and the API. |
-| `scraper/` | Scraper config (`courses.yaml`). Spiders come in a later phase. |
+| `scraper/` | Scrapy spiders. `example_platform` is a fixture stub; other spiders come later. |
 | `api/` | FastAPI app. Routes come in a later phase. |
 | `web/` | Next.js app. UI comes in a later phase. |
 
 `db/` sits beside the three app directories because both the scraper and the API use the same schema.
 
-## Phase 1 (this checkout)
+## Phase 1
 
 - Docker Compose Postgres
 - Tables: `courses`, `tee_times`, `scrape_runs`
@@ -24,6 +24,17 @@ Booking is not handled here. Each result will deep-link to the course's own book
 
 Times in `tee_times.starts_at` are UTC (`timestamptz`). Each course stores an IANA `timezone` for interpreting searches and displaying local times.
 
+## Phase 2
+
+`example_platform` is the only spider. It loops every catalog course with that platform and parses `scraper/tests/fixtures/example_platform.json`. That file is synthetic. The request URL is a non-routable placeholder that never leaves the process. There is no live booking endpoint yet.
+
+The pipeline drops items with a missing start time, a negative price, or a start time in the past. It upserts on `(course_id, starts_at, holes)`. After a course yields at least one item, tee times in the next 14 local days with an older `scraped_at` are deleted. A course that yields nothing, or errors, keeps its existing rows. `scrape_runs` records `last_success_at`, `last_item_count`, and `last_error`.
+
+```bash
+uv pip install -e "./scraper[dev]"
+cd scraper && scrapy crawl example_platform
+```
+
 ## Local setup
 
 Requires Python 3.11+ and Docker. macOS `/usr/bin/python3` is often 3.9, which is too old. [uv](https://docs.astral.sh/uv/) can download 3.12 without a Homebrew build:
@@ -31,7 +42,7 @@ Requires Python 3.11+ and Docker. macOS `/usr/bin/python3` is often 3.9, which i
 ```bash
 uv venv --python 3.12 .venv
 source .venv/bin/activate
-uv pip install -e "./db[dev]"
+uv pip install -e "./db[dev]" -e "./scraper[dev]"
 
 cp .env.example .env   # optional; defaults match this file
 docker compose up -d
@@ -39,9 +50,9 @@ alembic -c db/alembic.ini upgrade head
 python -m golfdb.seed
 ```
 
-If `python3.12` is already on your PATH, `python3.12 -m venv .venv` and `pip install -e "./db[dev]"` work the same way.
+If `python3.12` is already on your PATH, `python3.12 -m venv .venv` and `pip install -e "./db[dev]" -e "./scraper[dev]"` work the same way.
 
-`make up`, `make migrate`, `make seed`, and `make test` wrap the same commands. Activate the virtualenv first.
+`make up`, `make migrate`, `make seed`, `make test`, and `make crawl` wrap the same commands. Activate the virtualenv first.
 
 Postgres listens on `localhost:5432` as database `teetimes`, user `golf`, password `golf`.
 
@@ -49,6 +60,7 @@ Postgres listens on `localhost:5432` as database `teetimes`, user `golf`, passwo
 
 ```bash
 cd db && pytest
+cd scraper && pytest
 ```
 
-Catalog tests always run. Schema and seed tests talk to Postgres and skip if it is not up.
+Catalog and parser tests always run. Schema, seed, pipeline, and crawl tests talk to Postgres and skip if it is not up.

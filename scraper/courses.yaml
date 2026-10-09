@@ -5,8 +5,9 @@
 # Do not guess them.
 #
 # platform:
-#   example_platform — shared booking platform. One spider will loop every
-#     course with this value. Rename the platform id once the real one is known.
+#   example_platform — shared booking platform. spiders/example_platform.py
+#     loops every course with this value. The spider is still a fixture stub.
+#     Rename the platform id once the real one is known.
 #   custom — bespoke site. Later phase adds spiders/custom_<id>.py.
 #
 # `id` is the stable slug stored on courses.slug. `params` is read by spiders

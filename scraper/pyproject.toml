@@ -1,9 +1,20 @@
 [project]
 name = "golf-scraper"
-version = "0.1.0"
-description = "Scheduled tee-time scrapers. Spiders land in a later phase."
+version = "0.2.0"
+description = "Scheduled tee-time scrapers."
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "scrapy>=2.11",
+    "golfdb",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+]
+
+[tool.uv.sources]
+golfdb = { path = "../db", editable = true }
 
 [build-system]
 requires = ["setuptools>=68"]
@@ -11,3 +22,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

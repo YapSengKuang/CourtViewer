@@ -1,0 +1,39 @@
+{
+  "_fixture": "mock",
+  "_note": "Synthetic example_platform payload for the stub parser. This is not a response captured from a booking site. When a real response is saved here, update parse_example_platform to match that schema. The booking_url is a non-routable placeholder, not a course site.",
+  "booking_url": "https://example.invalid/todo-booking",
+  "slots": [
+    {
+      "offset_days": 1,
+      "local_time": "07:30",
+      "holes": 18,
+      "spots": 4,
+      "price_per_player": "72.00",
+      "currency": "USD"
+    },
+    {
+      "offset_days": 1,
+      "local_time": "07:30",
+      "holes": 9,
+      "spots": 2,
+      "price_per_player": "40.00",
+      "currency": "USD"
+    },
+    {
+      "offset_days": 6,
+      "local_time": "14:10",
+      "holes": 18,
+      "spots": 1,
+      "price_per_player": "89.50",
+      "currency": "USD"
+    },
+    {
+      "offset_days": 20,
+      "local_time": "09:00",
+      "holes": 18,
+      "spots": 4,
+      "price_per_player": "70.00",
+      "currency": "USD"
+    }
+  ]
+}

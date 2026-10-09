@@ -16,7 +16,9 @@ from golfdb.session import load_local_env  # noqa: E402
 config = context.config
 
 if config.config_file_name is not None:
-    fileConfig(config.config_file_name)
+    # The default fileConfig disables loggers created before the migration runs,
+    # including the scraper's, when tests upgrade the schema in-process.
+    fileConfig(config.config_file_name, disable_existing_loggers=False)
 
 load_local_env()
 database_url = os.environ.get("DATABASE_URL")

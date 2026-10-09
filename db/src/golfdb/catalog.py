@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 SLUG_RE = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 
-# Shared booking platform. One spider (added later) covers every course with this value.
+# Shared booking platform. spiders/example_platform.py covers every course with this value.
 # Rename it once the real platform is known. Do not invent request URLs here.
 EXAMPLE_PLATFORM = "example_platform"
 

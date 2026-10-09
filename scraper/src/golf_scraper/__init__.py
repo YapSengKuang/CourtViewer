@@ -1,1 +1,1 @@
-"""Tee-time scrapers. Spiders, items, and the pipeline are added in later phases."""
+"""Tee-time scrapers. One platform spider is wired through; the rest are later."""
