@@ -8,10 +8,22 @@ from golfdb.catalog import CUSTOM_PLATFORM, EXAMPLE_PLATFORM, CourseCatalog, loa
 from golfdb.session import load_local_env
 
 
-def test_real_catalog_is_six_stubs_without_booking_urls():
+def test_real_catalog_includes_club_mandalay_and_stubs():
     catalog = load_catalog()
-    assert len(catalog.courses) == 6
-    assert [course.id for course in catalog.courses] == [
+    by_id = {course.id: course for course in catalog.courses}
+    mandalay = by_id["club-mandalay"]
+    assert mandalay.name == "Club Mandalay"
+    assert mandalay.platform == "miclub"
+    assert mandalay.timezone == "Australia/Melbourne"
+    assert mandalay.holes_options == [9, 18]
+    assert mandalay.booking_url == (
+        "https://mandalay.miclub.com.au/guests/bookings/ViewPublicCalendar.msp?booking_resource_id=3000000"
+    )
+    assert mandalay.params["booking_resource_id"] == "3000000"
+    assert [group["holes"] for group in mandalay.params["fee_groups"]] == [18, 9]
+
+    stubs = [course for course in catalog.courses if course.id.startswith("stub-")]
+    assert [course.id for course in stubs] == [
         "stub-north",
         "stub-south",
         "stub-east",
@@ -19,16 +31,15 @@ def test_real_catalog_is_six_stubs_without_booking_urls():
         "stub-ridge",
         "stub-lake",
     ]
-    assert all(course.booking_url is None for course in catalog.courses)
-    assert all(course.address is None for course in catalog.courses)
-    assert all(course.lat is None and course.lng is None for course in catalog.courses)
-    assert all(course.params == {} for course in catalog.courses)
-    assert all(course.timezone == "America/Los_Angeles" for course in catalog.courses)
+    assert all(course.booking_url is None for course in stubs)
+    assert all(course.address is None for course in stubs)
+    assert all(course.params == {} for course in stubs)
+    assert all(course.timezone == "America/Los_Angeles" for course in stubs)
 
     by_platform: dict[str, int] = {}
     for course in catalog.courses:
         by_platform[course.platform] = by_platform.get(course.platform, 0) + 1
-    assert by_platform == {EXAMPLE_PLATFORM: 4, CUSTOM_PLATFORM: 2}
+    assert by_platform == {EXAMPLE_PLATFORM: 4, CUSTOM_PLATFORM: 2, "miclub": 1}
 
 
 def test_rejects_unknown_timezone(tmp_path: Path):
