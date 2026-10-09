@@ -1,0 +1,31 @@
+{
+  "_fixture": "mock",
+  "_note": "Synthetic bespoke payload for stub-ridge. Not captured from a booking site. The booking_url is a non-routable placeholder.",
+  "booking_url": "https://example.invalid/todo-booking-ridge",
+  "openings": [
+    {
+      "day_offset": 2,
+      "time": "08:10",
+      "hole_count": 18,
+      "available": 3,
+      "player_price": "95.00",
+      "currency": "USD"
+    },
+    {
+      "day_offset": 2,
+      "time": "08:10",
+      "hole_count": 9,
+      "available": 2,
+      "player_price": "48.00",
+      "currency": "USD"
+    },
+    {
+      "day_offset": 16,
+      "time": "09:00",
+      "hole_count": 18,
+      "available": 4,
+      "player_price": "80.00",
+      "currency": "USD"
+    }
+  ]
+}

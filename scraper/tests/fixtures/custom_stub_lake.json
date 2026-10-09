@@ -1,0 +1,31 @@
+{
+  "_fixture": "mock",
+  "_note": "Synthetic bespoke payload for stub-lake. Not captured from a booking site. The link is a non-routable placeholder.",
+  "link": "https://example.invalid/todo-booking-lake",
+  "rows": [
+    {
+      "in_days": 3,
+      "starts": "11:20",
+      "holes": 18,
+      "open_spots": 4,
+      "amount": "110.00",
+      "currency": "USD"
+    },
+    {
+      "in_days": 3,
+      "starts": "11:20",
+      "holes": 9,
+      "open_spots": 2,
+      "amount": "60.00",
+      "currency": "USD"
+    },
+    {
+      "in_days": 20,
+      "starts": "08:00",
+      "holes": 18,
+      "open_spots": 1,
+      "amount": "90.00",
+      "currency": "USD"
+    }
+  ]
+}

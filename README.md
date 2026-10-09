@@ -62,6 +62,10 @@ The page calls `http://localhost:8000` unless `NEXT_PUBLIC_API_URL` is set.
 
 `GET /api/health` is the per-course freshness check the page uses for "Updated X min ago".
 
+## Phase 6
+
+`custom_stub_ridge` and `custom_stub_lake` are fixture stubs for the two bespoke courses. Each has its own parser and checked-in mock payload. Real request URLs are still empty. `run_all` picks the spiders up automatically.
+
 ## Local setup
 
 Requires Python 3.11+ and Docker. macOS `/usr/bin/python3` is often 3.9, which is too old. [uv](https://docs.astral.sh/uv/) can download 3.12 without a Homebrew build:
