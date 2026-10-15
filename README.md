@@ -4,6 +4,14 @@ Search available tee times across several golf courses. Scraping runs on a sched
 
 Booking is not handled here. Each result will deep-link to the course's own booking page.
 
+## Project planning
+
+- [Project plan and MVP scope](docs/PROJECT_PLAN.md)
+- [Design document](docs/DESIGN_DOCUMENT.md)
+- [Timeline and proposed sprints](docs/TIMELINE_AND_SPRINTS.md)
+
+These documents reflect a source review on 16 October 2026 and distinguish existing code from proposed work. The historical phase notes below predate the MiClub adapter and Club Mandalay catalog entry; live source reliability still needs verification.
+
 ## Layout
 
 | Path | Role |
