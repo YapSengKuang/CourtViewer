@@ -9,8 +9,11 @@ Booking is not handled here. Each result will deep-link to the course's own book
 - [Project plan and MVP scope](docs/PROJECT_PLAN.md)
 - [Design document](docs/DESIGN_DOCUMENT.md)
 - [Timeline and proposed sprints](docs/TIMELINE_AND_SPRINTS.md)
+- [Sprint 1 implementation status and remaining work](docs/SPRINT_1_STATUS.md)
 
 These documents reflect a source review on 16 October 2026 and distinguish existing code from proposed work. The historical phase notes below predate the MiClub adapter and Club Mandalay catalog entry; live source reliability still needs verification.
+
+Sprint 1 now collects today through day +14 inclusive (15 local calendar dates). Next.js is configured for static export to `web/out` for Cloudflare Pages. The Supabase SQL API migration and hosted deployment are still pending. Before using a launch catalog, run `python -m golfdb.preflight path/to/catalog.yaml`; the development catalog intentionally fails because it contains synthetic courses.
 
 ## Layout
 

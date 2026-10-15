@@ -7,6 +7,7 @@ from decimal import Decimal
 from sqlalchemy import select
 
 from golf_scraper.spiders.example_platform import fixture_path, parse_example_platform
+from golf_scraper.window import scrape_window
 from golfdb.catalog import EXAMPLE_PLATFORM, load_catalog
 from golfdb.models import Course, ScrapeRun, TeeTime
 from golfdb.session import session_factory
@@ -43,10 +44,19 @@ def test_crawl_writes_fixture_tee_times(postgres):
     with factory() as session:
         for spec in courses:
             course = session.scalar(select(Course).where(Course.slug == spec.id))
-            rows = list(session.scalars(select(TeeTime).where(TeeTime.course_id == course.id)))
             health = session.scalar(select(ScrapeRun).where(ScrapeRun.course_id == course.id))
+            # Historical rows outside the current window may be retained. Only
+            # compare the snapshot published by this crawl, not prior runs.
+            rows = list(session.scalars(select(TeeTime).where(
+                TeeTime.course_id == course.id,
+                TeeTime.scraped_at == select(TeeTime.scraped_at).where(
+                    TeeTime.course_id == course.id
+                ).order_by(TeeTime.scraped_at.desc()).limit(1).scalar_subquery(),
+            )))
             assert rows, spec.id
             scraped_at = rows[0].scraped_at
+            window_start, window_end = scrape_window(spec.timezone, scraped_at)
+            assert all(window_start <= row.starts_at < window_end for row in rows)
             expected = parse_example_platform(payload, spec, now=scraped_at)
             assert len(rows) == len(expected) == health.last_item_count
             assert health.last_error is None

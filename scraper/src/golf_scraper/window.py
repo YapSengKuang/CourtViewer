@@ -1,12 +1,12 @@
 from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
-# How far ahead a scrape looks, in the course's local timezone.
-WINDOW_DAYS = 14
+# Include today and the date exactly two weeks ahead (offsets 0 through 14).
+WINDOW_DAYS = 15
 
 
 def scrape_window(timezone_name: str, now: datetime) -> tuple[datetime, datetime]:
-    """UTC bounds for [local midnight today, local midnight today + WINDOW_DAYS)."""
+    """UTC bounds including all of local today + 14 days; excludes day + 15."""
     if now.tzinfo is None:
         raise ValueError("now must be timezone-aware")
     zone = ZoneInfo(timezone_name)

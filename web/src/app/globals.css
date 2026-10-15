@@ -18,7 +18,7 @@
   --color-fairway: var(--fairway);
   --color-fairway-ink: var(--fairway-ink);
   --color-muted: var(--muted);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: Arial, Helvetica, sans-serif;
 }
 
 body {

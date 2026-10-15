@@ -55,13 +55,13 @@ def test_parser_keeps_only_holes_the_course_offers():
     assert [item["holes"] for item in eighteen_holes] == [18, 18]
 
 
-def test_parser_drops_slots_outside_the_fourteen_day_window():
+def test_parser_includes_day_fourteen_and_excludes_day_fifteen():
     course = _course("stub-north")
     payload = {
         "booking_url": "https://example.invalid/todo-booking",
         "slots": [
-            _slot(offset_days=13, local_time="23:50"),
-            _slot(offset_days=14, local_time="00:00"),
+            _slot(offset_days=14, local_time="23:50"),
+            _slot(offset_days=15, local_time="00:00"),
         ],
     }
     items = parse_example_platform(payload, course, now=NOW)

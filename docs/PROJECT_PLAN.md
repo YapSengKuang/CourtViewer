@@ -120,3 +120,10 @@ A private repository's 1,500-minute scrape allocation cannot sustain a 15-minute
 Release gate: record Free plan status, Actions hard-budget scope and stop setting (or absence of a payment method), runner type, usage thresholds, RPC limits and service-disable/recovery steps. Test circuit breakers with low test thresholds without deliberately consuming quota or generating charges. Keep exports/backups bounded within storage allowances. No paid upgrade is automatic.
 
 Sources: [Supabase cost controls](https://supabase.com/docs/guides/platform/cost-control), [GitHub hard budgets](https://docs.github.com/en/billing/how-tos/set-up-budgets), [Actions billing and quota blocking](https://docs.github.com/en/billing/concepts/product-billing/github-actions), [Pages static pricing](https://developers.cloudflare.com/pages/functions/pricing/). Checked 16 October 2026.
+
+
+### Sprint 1 owner decisions
+
+The owner supplied the following additional source URLs for investigation: [Glen Waverley / Golf Booking](https://www.golf-booking.com/en/club/glen-waverley-golf-course) and [Morack / MiClub](https://morack.miclub.com.au/guests/bookings/ViewPublicCalendar.msp). Together with Mandalay these are the proposed three-course, two-platform launch set, conditional on source feasibility. Do not substitute synthetic courses for missing integration evidence.
+
+The owner confirmed that a public repository is acceptable. This permits planning around free standard GitHub Actions runners for a public repository; actual repository visibility has not been changed. Billing controls, bounded jobs and usage monitoring still apply. See [Sprint 1 status](SPRINT_1_STATUS.md) for investigation results and remaining work.

@@ -1,9 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
-  cacheComponents: true,
-  partialPrefetching: true,
+  // Cloudflare Pages serves this app without a Node.js server.
+  output: "export",
   turbopack: {
     rules: {
       "*.css": {
