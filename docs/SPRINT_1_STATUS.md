@@ -52,3 +52,9 @@ Morack and Glen Waverley robots URLs could not be retrieved by the web inspectio
 Verification: **56 Python tests passed, zero skipped**, and **four frontend client tests passed**; lint, TypeScript and diff checks passed. Production build was retried and remains blocked by the same local Turbopack CSS-worker port-binding permission error. No successful static artifact or live Supabase/PostgREST HTTP test is claimed. Supabase timeout/quota controls and provider billing settings have not been applied.
 
 Next: verify hosted RPC integration and total API exposure, configure anonymous query timeout and usage limits, complete production source parameters/live fixtures, measure source/runtime/egress costs, and resolve the static build gate in an environment permitting the required build processes. The source identity and safe partition reconciliation blockers remain prerequisites to enabling production data. Sprint 1 remains in progress.
+
+## Owner verification and transition to Sprint 2
+
+The owner subsequently ran the static build successfully in ordinary macOS Terminal with Node 24.12.0: compilation, TypeScript, static-page generation and `out/index.html` checks passed. The exported files were served locally on port 8080. This resolves the project static-build gate in that environment; the agent's restricted process environment remains a separate limitation. The reported npm audit output contains five high-severity findings pending triage.
+
+Sprint 1 changes were merged and pushed to `main` at the owner's request. Unfinished hosted/source/billing feasibility items carry forward explicitly; the merge does not mark those acceptance criteria complete. Work continues in [Sprint 2](SPRINT_2_STATUS.md).
