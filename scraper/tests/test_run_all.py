@@ -50,6 +50,7 @@ def test_subprocess_has_a_hard_timeout(monkeypatch):
     from types import SimpleNamespace
     module = importlib.import_module('golf_scraper.run_all')
     kwargs_seen = []
+    monkeypatch.setattr(module, 'collection_outcome', lambda *args, **kwargs: 0)
     monkeypatch.setattr(module.subprocess, 'run', lambda *args, **kwargs:
         kwargs_seen.append(kwargs) or SimpleNamespace(returncode=0))
     assert module.run_spider('miclub', timeout=42) == 0

@@ -13,7 +13,7 @@ def test_tables_constraints_and_index(engine):
     assert set(inspector.get_table_names()) >= {"courses", "tee_times", "scrape_runs"}
 
     tee_uniques = {tuple(item["column_names"]) for item in inspector.get_unique_constraints("tee_times")}
-    assert ("course_id", "starts_at", "holes") in tee_uniques
+    assert ("course_id", "starts_at", "holes", "source_partition", "source_slot_key") in tee_uniques
 
     index_names = {item["name"] for item in inspector.get_indexes("tee_times")}
     assert "ix_tee_times_starts_at_course_id" in index_names

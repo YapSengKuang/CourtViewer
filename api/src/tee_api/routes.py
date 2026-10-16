@@ -117,6 +117,8 @@ def search_tee_times(
         zone = ZoneInfo(course.timezone)
         tee_times.append(
             TeeTimeOut(
+                source_partition=slot.source_partition,
+                source_slot_key=slot.source_slot_key,
                 course_slug=course.slug,
                 course_name=course.name,
                 address=course.address,

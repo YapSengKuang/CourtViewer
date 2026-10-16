@@ -12,6 +12,8 @@ from zoneinfo import ZoneInfo
 
 import scrapy
 
+from golf_scraper.coverage import fixture_coverage
+
 from golf_scraper.items import PRICE_UNIT_PER_ROUND, TeeTimeItem
 from golf_scraper.window import scrape_window
 from golfdb.catalog import CourseSpec, load_catalog
@@ -82,6 +84,7 @@ class CustomStubLakeSpider(scrapy.Spider):
         self.courses = [course for course in load_catalog().courses if course.id == COURSE_SLUG]
         self.course_slugs = [course.id for course in self.courses]
         self.course_errors: dict[str, str] = {}
+        fixture_coverage(self)
 
     async def start(self):
         for request in self.iter_requests():
@@ -103,16 +106,22 @@ class CustomStubLakeSpider(scrapy.Spider):
     def parse(self, response):
         course: CourseSpec = response.meta["course"]
         try:
-            items = parse_custom_stub_lake(json.loads(response.text), course, now=self.now)
+            payload = json.loads(response.text)
+            if not isinstance(payload.get("rows"), list):
+                raise ValueError("missing rows collection")
+            items = parse_custom_stub_lake(payload, course, now=self.now)
         except Exception as exc:
+            self.coverage.fail(course.id, "window", str(exc))
             self.course_errors[course.id] = str(exc)
             self.logger.exception("failed to parse %s", self.name)
             return
         if not items:
             self.logger.warning("%s parsed 0 tee times", self.name)
+        self.coverage.complete(course.id, "window")
         yield from items
 
     def on_error(self, failure):
         course: CourseSpec = failure.request.meta["course"]
+        self.coverage.fail(course.id, "window", failure.getErrorMessage())
         self.course_errors[course.id] = failure.getErrorMessage()
         self.logger.error("%s request failed: %s", self.name, self.course_errors[course.id])

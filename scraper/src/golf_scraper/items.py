@@ -19,3 +19,5 @@ class TeeTimeItem(scrapy.Item):
     currency = scrapy.Field()
     price_unit = scrapy.Field()
     booking_url = scrapy.Field()
+    source_partition = scrapy.Field()
+    source_slot_key = scrapy.Field()

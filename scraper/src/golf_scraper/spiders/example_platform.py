@@ -12,6 +12,8 @@ from zoneinfo import ZoneInfo
 
 import scrapy
 
+from golf_scraper.coverage import fixture_coverage
+
 from golf_scraper.items import PRICE_UNIT_PER_ROUND, TeeTimeItem
 from golf_scraper.window import scrape_window
 from golfdb.catalog import EXAMPLE_PLATFORM, CourseSpec, load_catalog
@@ -90,6 +92,7 @@ class ExamplePlatformSpider(scrapy.Spider):
         self.courses = [course for course in load_catalog().courses if course.platform == self.platform]
         self.course_slugs = [course.id for course in self.courses]
         self.course_errors: dict[str, str] = {}
+        fixture_coverage(self)
 
     async def start(self):
         # Scrapy 2.13+ calls start(), not start_requests().
@@ -120,17 +123,22 @@ class ExamplePlatformSpider(scrapy.Spider):
         course: CourseSpec = response.meta["course"]
         try:
             payload = json.loads(response.text)
+            if not isinstance(payload.get("slots"), list):
+                raise ValueError("missing slots collection")
             items = parse_example_platform(payload, course, now=self.now)
         except Exception as exc:
+            self.coverage.fail(course.id, "window", str(exc))
             self.course_errors[course.id] = str(exc)
             self.logger.exception("failed to parse %s for %s", self.name, course.id)
             return
         if not items:
             self.logger.warning("%s parsed 0 tee times for %s", self.name, course.id)
+        self.coverage.complete(course.id, "window")
         yield from items
 
     def on_error(self, failure):
         course: CourseSpec = failure.request.meta["course"]
+        self.coverage.fail(course.id, "window", failure.getErrorMessage())
         message = failure.getErrorMessage()
         self.course_errors[course.id] = message
         self.logger.error("%s request failed for %s: %s", self.name, course.id, message)

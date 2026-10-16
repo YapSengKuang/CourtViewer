@@ -82,6 +82,8 @@ class TeeTime(Base):
     )
     booking_url: Mapped[str] = mapped_column(Text, nullable=False)
     scraped_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    source_partition: Mapped[str] = mapped_column(String(200), nullable=False, default="window", server_default="window")
+    source_slot_key: Mapped[str] = mapped_column(String(200), nullable=False, default="", server_default="")
 
     course: Mapped[Course] = relationship(back_populates="tee_times")
 
@@ -90,7 +92,9 @@ class TeeTime(Base):
             "course_id",
             "starts_at",
             "holes",
-            name="uq_tee_times_course_start_holes",
+            "source_partition",
+            "source_slot_key",
+            name="uq_tee_times_bookable_group",
         ),
         Index("ix_tee_times_starts_at_course_id", "starts_at", "course_id"),
         CheckConstraint("spots_available >= 0", name="ck_tee_times_spots_nonnegative"),
@@ -119,3 +123,30 @@ class ScrapeRun(Base):
     course: Mapped[Course] = relationship(back_populates="scrape_run")
 
     __table_args__ = (UniqueConstraint("course_id", name="uq_scrape_runs_course_id"),)
+
+
+class ScrapeExecution(Base):
+    __tablename__ = "scrape_executions"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    spider: Mapped[str] = mapped_column(String(100), nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+
+
+class ScrapePartition(Base):
+    __tablename__ = "scrape_partitions"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    execution_id: Mapped[str] = mapped_column(ForeignKey("scrape_executions.id", ondelete="CASCADE"), nullable=False)
+    course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
+    key: Mapped[str] = mapped_column(String(200), nullable=False)
+    window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    window_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)
+    accepted_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    rejected_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0, server_default="0")
+    error: Mapped[str | None] = mapped_column(Text)
+    __table_args__ = (
+        UniqueConstraint("execution_id", "course_id", "key", name="uq_execution_partition"),
+        Index("ix_partition_course_key", "course_id", "key"),
+    )

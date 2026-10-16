@@ -1,4 +1,6 @@
 export type TeeTime = {
+  source_partition: string;
+  source_slot_key: string;
   course_slug: string;
   course_name: string;
   address: string | null;

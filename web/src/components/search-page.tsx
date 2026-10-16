@@ -156,7 +156,7 @@ export function SearchPage() {
         {status === "ready"
           ? ordered.map((teeTime) => (
               <TeeTimeCard
-                key={`${teeTime.course_slug}-${teeTime.starts_at}-${teeTime.holes}`}
+                key={`${teeTime.course_slug}-${teeTime.starts_at}-${teeTime.holes}-${teeTime.source_partition}-${teeTime.source_slot_key}`}
                 teeTime={teeTime}
               />
             ))

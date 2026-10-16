@@ -12,11 +12,14 @@ import sys
 import time
 from collections.abc import Callable
 from pathlib import Path
+from datetime import datetime, timezone
 
 from scrapy import Spider
 from sqlalchemy import Engine, text
 
 from golfdb.session import get_engine
+from golfdb.models import ScrapeExecution, ScrapePartition
+from sqlalchemy import select, update
 
 import golf_scraper.spiders as spiders_package
 
@@ -50,14 +53,37 @@ def spider_names() -> list[str]:
     return sorted(set(names))
 
 
+def collection_outcome(name: str, since: datetime, *, interrupted: bool = False) -> int:
+    """Scrapy can exit zero even if individual responses/pipelines failed."""
+    engine = get_engine()
+    try:
+        with engine.begin() as connection:
+            runs = connection.execute(select(ScrapeExecution.id, ScrapeExecution.status).where(
+                ScrapeExecution.spider == name, ScrapeExecution.started_at >= since)).all()
+            for execution_id, status in runs:
+                if status == 'running':
+                    connection.execute(update(ScrapeExecution).where(ScrapeExecution.id == execution_id).values(
+                        status='interrupted', finished_at=datetime.now(timezone.utc)))
+                    connection.execute(update(ScrapePartition).where(
+                        ScrapePartition.execution_id == execution_id, ScrapePartition.status == 'pending').values(
+                            status='incomplete', error='worker exited before completion'))
+            return 0 if runs and not interrupted and all(status == 'complete' for _, status in runs) else 1
+    finally:
+        engine.dispose()
+
+
 def run_spider(name: str, timeout: float = SPIDER_TIMEOUT_SECONDS) -> int:
-    completed = subprocess.run(
-        [sys.executable, "-m", "scrapy", "crawl", name],
-        cwd=scraper_root(),
-        check=False,
-        timeout=timeout,
-    )
-    return completed.returncode
+    started = datetime.now(timezone.utc)
+    try:
+        completed = subprocess.run(
+            [sys.executable, "-m", "scrapy", "crawl", name],
+            cwd=scraper_root(), check=False, timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        collection_outcome(name, started, interrupted=True)
+        raise
+    outcome = collection_outcome(name, started, interrupted=completed.returncode != 0)
+    return completed.returncode or outcome
 
 
 def run_all(runner: Callable[[str], int] | None = None) -> int:

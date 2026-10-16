@@ -21,6 +21,8 @@ class CourseList(BaseModel):
 
 
 class TeeTimeOut(BaseModel):
+    source_partition: str = "window"
+    source_slot_key: str = ""
     course_slug: str
     course_name: str
     address: str | None

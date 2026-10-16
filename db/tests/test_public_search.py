@@ -2,7 +2,7 @@ from datetime import datetime, time, timedelta, timezone
 from decimal import Decimal
 
 import pytest
-from sqlalchemy import text
+from sqlalchemy import text, select
 from sqlalchemy.exc import DBAPIError
 
 from golfdb.models import Course, ScrapeRun, TeeTime
@@ -141,3 +141,20 @@ def test_rpc_excludes_slots_that_have_already_started(availability):
     from zoneinfo import ZoneInfo
     today = session.scalar(text('SELECT CURRENT_TIMESTAMP')).astimezone(ZoneInfo('Australia/Melbourne')).date()
     assert search(session, today)['tee_times'] == []
+
+
+def test_party_size_cannot_combine_independent_groups(availability):
+    session, day = availability
+    original = session.scalar(select(TeeTime).join(Course).where(
+        Course.slug == 'rpc-probe', TeeTime.spots_available == 4,
+        TeeTime.scraped_at == text('CURRENT_TIMESTAMP'), TeeTime.starts_at > text('CURRENT_TIMESTAMP')))
+    original.spots_available = 2
+    original.source_slot_key = 'first-tee'
+    session.add(TeeTime(course_id=original.course_id, starts_at=original.starts_at, holes=18,
+        spots_available=2, price_per_player=original.price_per_player, currency='AUD',
+        booking_url=original.booking_url, scraped_at=original.scraped_at, source_slot_key='tenth-tee'))
+    session.flush()
+    result = search(session, day)
+    assert len(result['tee_times']) == 2
+    assert {slot['source_slot_key'] for slot in result['tee_times']} == {'first-tee', 'tenth-tee'}
+    assert search(session, day, players=4)['tee_times'] == []
