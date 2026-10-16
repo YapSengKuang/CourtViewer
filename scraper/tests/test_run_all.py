@@ -55,3 +55,8 @@ def test_subprocess_has_a_hard_timeout(monkeypatch):
         kwargs_seen.append(kwargs) or SimpleNamespace(returncode=0))
     assert module.run_spider('miclub', timeout=42) == 0
     assert kwargs_seen[0]['timeout'] == 42
+
+
+def test_beta_catalog_runs_only_configured_real_adapters(monkeypatch):
+    monkeypatch.setenv('COURSES_YAML', 'scraper/courses.beta.yaml')
+    assert spider_names() == ['miclub']

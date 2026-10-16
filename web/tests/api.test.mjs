@@ -34,13 +34,13 @@ const configured = {
 test('Supabase mode uses bounded RPC arguments and public key', async t => {
   const api = await client(t, configured);
   globalThis.fetch = async (url, options) => {
-    assert.equal(url, 'https://project.supabase.co/rest/v1/rpc/golf_search');
+    assert.equal(url, 'https://project.supabase.co/rest/v1/rpc/golf_search_v2');
     assert.equal(options.method, 'POST');
     assert.equal(options.headers.apikey, 'sb_publishable_test');
     assert.equal(options.headers.Authorization, undefined);
     assert.deepEqual(JSON.parse(options.body), {
       p_date: input.date, p_time_from: '08:00', p_time_to: '10:00', p_players: 2,
-      p_holes: null, p_limit: 200, p_offset: 0,
+      p_holes: null, p_limit: 100, p_offset: 0, p_sort: 'starts_at', p_course_slug: null,
     });
     assert.ok(options.signal instanceof AbortSignal);
     return Response.json({ tee_times: [{ course_slug: 'mandalay' }] });
@@ -75,4 +75,30 @@ test('local development retains the FastAPI contract', async t => {
     return Response.json({ tee_times: [] });
   };
   assert.deepEqual(await api.searchTeeTimes({ ...input, holes: '9' }), []);
+});
+
+
+test('beta search forwards submitted course, sort and page', async t => {
+  const api = await client(t, configured);
+  globalThis.fetch = async (url, options) => {
+    assert.ok(url.endsWith('/golf_search_v2'));
+    const args = JSON.parse(options.body);
+    assert.equal(args.p_course_slug, 'morack');
+    assert.equal(args.p_sort, 'price');
+    assert.equal(args.p_offset, 100);
+    assert.equal(args.p_limit, 100);
+    return Response.json({ tee_times: [], has_more: true, coverage: [{ slug: 'morack', status: 'incomplete' }] });
+  };
+  const result = await api.searchAvailability({ ...input, courseSlug: 'morack', sort: 'price', offset: 100 });
+  assert.equal(result.has_more, true);
+  assert.equal(result.coverage[0].status, 'incomplete');
+});
+
+test('course picker uses bounded public course metadata RPC', async t => {
+  const api = await client(t, configured);
+  globalThis.fetch = async url => {
+    assert.ok(url.endsWith('/golf_courses'));
+    return Response.json({ courses: [{ slug: 'morack', date_to: '2026-10-30' }] });
+  };
+  assert.equal((await api.fetchCourses())[0].date_to, '2026-10-30');
 });

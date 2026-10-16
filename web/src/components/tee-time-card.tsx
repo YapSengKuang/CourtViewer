@@ -14,7 +14,7 @@ export function TeeTimeCard({ teeTime }: TeeTimeCardProps) {
         <h2 className="mt-1 text-lg font-medium">{teeTime.course_name}</h2>
         <p className="text-sm text-muted">{location}</p>
         <p className="mt-2 text-sm text-muted">
-          {teeTime.holes} holes · {formatSpots(teeTime.spots_available)} ·{" "}
+          {teeTime.timezone} · {teeTime.holes} holes · {formatSpots(teeTime.spots_available)} ·{" "}
           {formatUpdated(teeTime.scraped_at)}
         </p>
       </div>

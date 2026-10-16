@@ -7,7 +7,7 @@ from pathlib import Path
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from golfdb.catalog import CourseSpec, default_catalog_path, load_catalog
+from golfdb.catalog import CourseSpec, default_catalog_path, load_catalog, repo_root
 from golfdb.models import Course, ScrapeRun
 from golfdb.session import load_local_env, session_factory
 
@@ -69,7 +69,8 @@ def catalog_path_from_env() -> Path:
     load_local_env()
     override = os.environ.get("COURSES_YAML")
     if override:
-        return Path(override)
+        path = Path(override)
+        return path if path.is_absolute() else repo_root() / path
     return default_catalog_path()
 
 

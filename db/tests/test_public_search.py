@@ -158,3 +158,72 @@ def test_party_size_cannot_combine_independent_groups(availability):
     assert len(result['tee_times']) == 2
     assert {slot['source_slot_key'] for slot in result['tee_times']} == {'first-tee', 'tenth-tee'}
     assert search(session, day, players=4)['tee_times'] == []
+
+
+def beta_search(session, day, **overrides):
+    params = dict(day=day, start=time(0), end=time(23, 59, 59), players=2, holes=None,
+                  limit=100, offset=0, sort='starts_at', slug=None)
+    params.update(overrides)
+    return session.scalar(text('''SELECT public.golf_search_v2(
+        :day, :start, :end, :players, :holes, :limit, :offset, :sort, :slug)'''), params)
+
+
+def test_beta_sorting_pages_and_course_filter(availability):
+    session, day = availability
+    original = session.scalar(select(TeeTime).join(Course).where(
+        Course.slug == 'rpc-probe', TeeTime.spots_available == 4,
+        TeeTime.scraped_at == text('CURRENT_TIMESTAMP'), TeeTime.starts_at > text('CURRENT_TIMESTAMP')))
+    session.add(TeeTime(course_id=original.course_id, starts_at=original.starts_at + timedelta(minutes=5),
+        holes=18, spots_available=4, price_per_player=Decimal('10.00'), currency='AUD',
+        booking_url=original.booking_url, scraped_at=original.scraped_at, source_slot_key='cheaper'))
+    session.flush()
+    first = beta_search(session, day, sort='price', limit=1, slug='rpc-probe')
+    assert first['has_more'] is True
+    assert first['tee_times'][0]['price_per_player'] == '10.00'
+    second = beta_search(session, day, sort='price', limit=1, offset=1)
+    assert second['has_more'] is False
+    assert second['tee_times'][0]['price_per_player'] == '42.50'
+    assert beta_search(session, day, limit=1)['tee_times'][0]['price_per_player'] == '42.50'
+    assert first['coverage'][0]['status'] == 'unchecked'
+
+
+@pytest.mark.parametrize('overrides', [{'sort': 'bad'}, {'slug': 'rpc-hidden'}])
+def test_beta_rejects_disabled_course_and_bad_sort(availability, overrides):
+    session, day = availability
+    with pytest.raises(DBAPIError):
+        beta_search(session, day, **overrides)
+
+
+def test_beta_courses_hide_disabled_and_include_local_horizon(availability):
+    session, day = availability
+    courses = session.scalar(text('SELECT public.golf_courses()'))['courses']
+    assert [c['slug'] for c in courses] == ['rpc-probe']
+    assert courses[0]['date_to'] == day.isoformat()
+
+
+def test_beta_coverage_distinguishes_partial_from_fresh_empty(availability):
+    from uuid import uuid4
+    from zoneinfo import ZoneInfo
+    from golfdb.models import ScrapeExecution, ScrapePartition
+    session, day = availability
+    course_id = session.scalar(select(Course.id).where(Course.slug == 'rpc-probe'))
+    now = session.scalar(text('SELECT CURRENT_TIMESTAMP'))
+    execution_id = str(uuid4())
+    session.add(ScrapeExecution(id=execution_id, spider='probe', status='partial', started_at=now))
+    session.flush()
+    start = datetime.combine(day, time(0), ZoneInfo('Australia/Melbourne'))
+    for key, status in [('nine', 'empty'), ('eighteen', 'failed')]:
+        session.add(ScrapePartition(execution_id=execution_id, course_id=course_id, key=key,
+            window_start=start, window_end=start+timedelta(days=1), status=status))
+    session.flush()
+    coverage = beta_search(session, day)['coverage'][0]
+    assert coverage['status'] == 'incomplete' and coverage['checked'] == 1 and coverage['expected'] == 2
+    session.execute(text("UPDATE scrape_partitions SET status='empty' WHERE execution_id=:id"), {'id': execution_id})
+    assert beta_search(session, day)['coverage'][0]['status'] == 'complete'
+
+
+def test_beta_rpc_defaults_do_not_grant_public_execution(db_session):
+    assert db_session.scalar(text('''SELECT count(*) FROM pg_proc p,
+        LATERAL aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+        WHERE p.proname IN ('golf_search_v2','golf_courses','golf_coverage')
+        AND a.grantee = 0 AND a.privilege_type = 'EXECUTE' ''')) == 0

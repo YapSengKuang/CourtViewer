@@ -34,4 +34,11 @@ export type SearchInput = {
   timeTo: string;
   holes: HolesChoice;
   players: number;
+  courseSlug?: string;
+  sort?: SortChoice;
+  offset?: number;
 };
+
+export type CourseChoice = { slug: string; name: string; timezone: string; date_from?: string; date_to?: string };
+export type CoverageStatus = { slug: string; name: string; status: "complete" | "incomplete" | "unchecked" | "outside_horizon"; expected: number; checked: number };
+export type SearchResult = { tee_times: TeeTime[]; has_more: boolean; coverage: CoverageStatus[] };

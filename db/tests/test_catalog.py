@@ -115,3 +115,9 @@ def _course(course_id: str) -> dict:
         "booking_url": None,
         "params": {},
     }
+
+
+def test_catalog_environment_path_resolves_from_repo_root(monkeypatch, tmp_path):
+    monkeypatch.setenv('COURSES_YAML', 'scraper/courses.beta.yaml')
+    monkeypatch.chdir(tmp_path)
+    assert [course.id for course in load_catalog().courses] == ['club-mandalay', 'morack']

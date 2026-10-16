@@ -57,3 +57,16 @@ This takes effect for subsequent permission checks; it does not cancel already r
 Before launch: verify actual anonymous HTTP calls, table read/write denial, invalid-parameter responses, statement timeout, total API exposure, public-key-only configuration, Free billing state and quota alerts. Measure scrape runtime and database egress on the real sources. The remaining release blockers are tracked in [Sprint 1 status](../SPRINT_1_STATUS.md).
 
 Primary references: [Supabase database functions](https://supabase.com/docs/guides/database/functions), [securing the Data API](https://supabase.com/docs/guides/api/securing-your-api).
+
+## Sprint 3 API update
+
+Apply migration `0004_beta_search` before publishing the new frontend. It calls `golf_search_v2` with the previous arguments plus `p_sort` (`starts_at` or `price`) and optional `p_course_slug`. Responses add `has_more` and sanitised per-course date `coverage`; the default client page is 100 rows. `golf_courses` supplies enabled-course names, timezone and inclusive local date bounds. `golf_coverage` is an internal helper with no public execute grant. The v1 RPC remains for older clients.
+
+Emergency public disable must now also revoke:
+
+```sql
+REVOKE EXECUTE ON FUNCTION public.golf_search_v2(date,time,time,integer,integer,integer,integer,text,text) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.golf_courses() FROM anon;
+```
+
+Apply these in addition to the v1 search/health revocations above; verify no other inherited grants reopen access. Review/verify all four public entry points on the actual hosted instance before enabling courses. Nothing in this migration changes provider billing or rate-limit settings.
