@@ -1,6 +1,6 @@
 # Golf Booker — project plan
 
-Planning baseline: 16 October 2026. Status: proposed, based on repository inspection; live source behaviour and deployment have not been verified.
+Planning baseline: 16 October 2026. Implementation and hosted verification are in progress. The static frontend is deployed at https://golf-booker-beta.pages.dev with a Supabase Free database in Sydney. Live collection is only partially verified; courses remain disabled publicly and the beta acceptance gate is still open. The foundation table below records the original planning baseline; current evidence is in [Sprint 3 status](SPRINT_3_STATUS.md).
 
 ## Product objective
 

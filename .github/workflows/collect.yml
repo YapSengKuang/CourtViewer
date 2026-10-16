@@ -1,0 +1,35 @@
+name: Collect public tee times
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hosted-golf-collection
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    # Standard public-repository runners have no execution-minute charge.
+    # A visibility change or operator stop must fail closed.
+    if: github.event.repository.private == false && vars.GOLF_COLLECTION_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e ./db -e ./scraper
+      - name: Collect verified candidate sources
+        env:
+          DATABASE_URL: ${{ secrets.GOLF_DATABASE_URL }}
+          COURSES_YAML: scraper/courses.beta.yaml
+        run: |
+          test -n "$DATABASE_URL"
+          python -m golf_scraper.run_all
+
+# Scheduling remains off until source parity, retention and quota checks pass.
+# No artifacts, dependency cache, paid runner, or deployment token is used.

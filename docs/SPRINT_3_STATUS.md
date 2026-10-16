@@ -1,6 +1,6 @@
 # Sprint 3 — beta search and source integration
 
-In progress on `codex/sprint-3`. This batch does not deploy a beta or complete the three-course/two-platform target.
+In progress on `codex/sprint-3`. The public static frontend is deployed at https://golf-booker-beta.pages.dev; this is a deployment preview with no enabled courses, not the completed availability beta. The three-course/two-platform target remains open.
 
 ## Implemented
 
@@ -25,4 +25,17 @@ The static export builds successfully locally. Six frontend contract tests, lint
 
 Python regression checks cover course selection, sorting before paging, page continuation, disabled-course rejection, horizon metadata, private grants, fresh-empty versus partial coverage, Morack fixture pricing and catalog adapter selection. Final counts are recorded in the commit summary.
 
-Remaining before beta: complete Glen Waverley or explicitly revise the source target; verify full live source/date/fee parity; configure Supabase/Pages Free accounts and database/API roles; verify hard billing controls; measure collection runtime and quota headroom; deploy staging and run end-to-end acceptance. Do not describe Sprint 3 or the public beta as complete yet.
+Remaining before beta: complete Glen Waverley or explicitly revise the source target; verify full live source/date/fee parity; finish billing/timeout verification, retention and quota headroom; enable verified courses and run end-to-end acceptance. Do not describe Sprint 3 or the public beta as complete yet.
+
+## Hosted verification — 16 October 2026
+
+- Created **Golf Booker** in **YapSengKuang's Org**, Sydney (`ap-southeast-2`), project `icrmnklkrmskooeuemjg`. The organization is Free; the project creation quote was $0/month. Applied the application baseline through Alembic revision `0004` and anonymous query timeouts. Application tables have RLS and no anonymous table grants.
+- Seeded only Mandalay and Morack, both with `public_enabled=false`. Anonymous catalog/search RPC HTTP requests returned 200; direct table read and write probes returned 401. Anonymous role configuration reports a 3-second statement timeout and 1-second lock timeout; intentional slow-query cancellation still needs a dedicated test.
+- Built the static frontend with the project's public URL and publishable key only. Uploaded 24 files to Cloudflare Pages as `golf-booker-beta`; the public page loads and Search returns a truthful unknown-coverage/empty state. No server Functions, paid IPv4 add-on, custom domain or paid upgrade was added.
+- Changed `YapSengKuang/CourtViewer` to public following the owner's earlier approval. Standard `ubuntu-latest` runners are used. A personal-account Actions hard budget has **not** been verified; do not describe one as configured.
+- Created a dedicated `golf_scraper` database login with RLS policies and access only to application collection tables/sequences. It cannot create roles/schema, bypass RLS or update course public flags. The free **session** pooler preserves the collector's advisory lock. Its connection is stored in GitHub's encrypted `GOLF_DATABASE_URL` secret, never frontend variables or tracked files.
+- A live local crawl took about 31 seconds; the hosted crawl took about 40 seconds. Both reported partial collection. Hosted Mandalay has 28 complete and 2 failed date/fee partitions; Morack has 15 failed partitions. No course was enabled. Mandalay's current-day empty layout is not yet positively recognised; Morack includes verified `$30.00 9 Holes Weekend` fees and rows offering only junior/concession fees. These cases require parser/coverage decisions and regression fixtures before publication.
+- Added a manual-only collection workflow, guarded by public repository visibility and `GOLF_COLLECTION_ENABLED=true`. The variable is not enabled and no schedule is active. The workflow must exist on the default branch before normal dispatch; Sprint 3 remains unmerged while release gates are open. It has a 10-minute job limit, read-only repository permissions and no cache/artifact upload.
+- Security advisors flag private RLS tables without policies and the four deliberately anonymous SECURITY DEFINER RPCs. Private tables deny anonymous access; public RPCs have fixed queries, empty search paths, bounded inputs and enabled-course checks. These warnings require documented review, not broad table grants or silently revoking the working API. See [RLS policy guidance](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy) and [anonymous definer function guidance](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable).
+
+Next: resolve and verify live source coverage, add bounded retention, test the manual workflow and emergency stop, verify remaining account billing settings, then enable accepted sources. Glen Waverley still needs a working verified public response and a permitted integration path. Full three-source beta acceptance and the Sprint 3 merge remain pending.

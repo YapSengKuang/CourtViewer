@@ -1,6 +1,6 @@
 # Option 4 — database search prototype and setup
 
-Status: implemented and tested on local Postgres; not yet verified against a hosted Supabase/PostgREST instance. No provider account or billing settings have been changed.
+Status: the hosted Free project `icrmnklkrmskooeuemjg` is provisioned in Sydney and the public static frontend is deployed at https://golf-booker-beta.pages.dev. Anonymous RPC/table-denial checks pass; courses remain disabled pending source acceptance. Current evidence and remaining billing gates are in [Sprint 3 status](../SPRINT_3_STATUS.md).
 
 ## Deploy the database
 
@@ -39,11 +39,11 @@ Search JSON arguments: `p_date` (ISO date), `p_time_from`/`p_time_to` (local clo
 
 The prototype excludes disabled courses, past slots, slots older than 60 minutes, future observation timestamps, insufficient capacity, non-HTTPS booking links and dates outside local today through +14. Inputs outside bounds raise SQLSTATE `22023`. A date outside all enabled course horizons is rejected; courses with a different local date are individually excluded when their horizon does not contain the requested date. No enabled courses returns an empty dataset. Health exposes a generic error message rather than raw scraper details.
 
-The web currently requests up to the first 200 results and sorts this subset locally; it shows a narrowing message at the cap. Server-side price sorting, course selection, pagination controls and precise partition coverage remain later work. Health is course-level summary, not proof of full date coverage. Slot cards now use the slot's own observation time.
+The deployed Sprint 3 web uses `golf_search_v2`, server-side sorting, course selection, 100-row pages and date partition coverage, described below. Health is still a course-level summary, not proof of full date coverage. Slot cards use the slot's own observation time.
 
 ## Cost controls and emergency stop
 
-Free plans/provider blocking are the billing boundary. The query limits cap response size, not total traffic. Configure a short statement timeout for the anonymous API role through the hosted provider's supported role/API configuration; verify with an intentionally slow test query in staging. No timeout or rate-limiting configuration is claimed applied by this migration. Browser timeouts do not cancel database work reliably. Public direct API traffic bypasses UI throttling, so monitor quotas and test the disable procedure.
+Free plans/provider blocking are the billing boundary. The query limits cap response size, not total traffic. The hosted anonymous role now has `statement_timeout=3s` and `lock_timeout=1s`, confirmed in role configuration; dedicated slow-query cancellation verification remains pending. No request-rate limit is configured. Browser timeouts do not cancel database work reliably. Public direct API traffic bypasses UI throttling, so monitor quotas and test the disable procedure.
 
 Disable the complete public search surface with a trusted database connection:
 
