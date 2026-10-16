@@ -1,6 +1,6 @@
 # Sprint 3 — beta search and source integration
 
-In progress on `codex/sprint-3`. The public static frontend is deployed at https://golf-booker-beta.pages.dev; this is a deployment preview with no enabled courses, not the completed availability beta. The three-course/two-platform target remains open.
+The initial **Mandalay-only beta** is live at https://golf-booker-beta.pages.dev. The owner explicitly approved this initial scope on 16 October, with Morack and Glen Waverley to follow. The original three-course/two-platform target moves to the follow-up backlog. Operational soak and remaining account-wide billing verification are still open.
 
 ## Implemented
 
@@ -29,6 +29,8 @@ Remaining before beta: complete Glen Waverley or explicitly revise the source ta
 
 ## Hosted verification — 16 October 2026
 
+The bullets below describe the initial deployment checkpoint. The subsequent Mandalay launch section records the current state and supersedes its disabled-course/manual-only statements.
+
 - Created **Golf Booker** in **YapSengKuang's Org**, Sydney (`ap-southeast-2`), project `icrmnklkrmskooeuemjg`. The organization is Free; the project creation quote was $0/month. Applied the application baseline through Alembic revision `0004` and anonymous query timeouts. Application tables have RLS and no anonymous table grants.
 - Seeded only Mandalay and Morack, both with `public_enabled=false`. Anonymous catalog/search RPC HTTP requests returned 200; direct table read and write probes returned 401. Anonymous role configuration reports a 3-second statement timeout and 1-second lock timeout; intentional slow-query cancellation still needs a dedicated test.
 - Built the static frontend with the project's public URL and publishable key only. Uploaded 24 files to Cloudflare Pages as `golf-booker-beta`; the public page loads and Search returns a truthful unknown-coverage/empty state. No server Functions, paid IPv4 add-on, custom domain or paid upgrade was added.
@@ -39,3 +41,15 @@ Remaining before beta: complete Glen Waverley or explicitly revise the source ta
 - Security advisors flag private RLS tables without policies and the four deliberately anonymous SECURITY DEFINER RPCs. Private tables deny anonymous access; public RPCs have fixed queries, empty search paths, bounded inputs and enabled-course checks. These warnings require documented review, not broad table grants or silently revoking the working API. See [RLS policy guidance](https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy) and [anonymous definer function guidance](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable).
 
 Next: resolve and verify live source coverage, add bounded retention, test the manual workflow and emergency stop, verify remaining account billing settings, then enable accepted sources. Glen Waverley still needs a working verified public response and a permitted integration path. Full three-source beta acceptance and the Sprint 3 merge remain pending.
+
+## Mandalay launch — revised initial scope
+
+- The owner approved launching Mandalay first. Added `scraper/courses.mandalay.yaml` for the deployed worker; Morack and synthetic sources are excluded. Morack and Glen Waverley remain follow-up work.
+- Verified the actual Mandalay no-rows panel with the All-times radio selected. A minimal fixture contains only the date, filter and empty marker; regression tests reject unselected filters, changed notices and panels outside the tee sheet.
+- A fresh hosted crawl completed in about 43 seconds with all **30** date/fee partitions accepted: 28 populated, 2 verified empty. Only then enabled Mandalay. Morack remains disabled.
+- Public HTTP search returned 48 matching slots for 17 October with two players, complete coverage on day +14 (30 October), and HTTP 400 for day +15. Browser checks on the public domain showed fresh cards with prices, group capacity and provider booking links; day +14 pagination advanced to Page 2 and correctly disabled Next on the final page.
+- The restricted role successfully ran maintenance and collection. Maintenance fails before writes at 350 MiB total database size, prunes past tee times, and deletes only finished complete/partial/failed executions older than 30 days (partition rows cascade). Active, recent and interrupted executions are preserved. The database size check is a conservative storage guard, not an API-egress meter.
+- Added an off-quarter-hour 15-minute schedule, 10-minute job deadline, public-repository guard and operator variable. It uses no cache or artifact upload and no paid runner. A failed scheduled crawl leaves stale results hidden after 60 minutes; GitHub scheduling is best effort, not an uptime guarantee.
+- **88 Python tests pass** after parser and maintenance changes. The existing six frontend tests/static build passed at the deployment checkpoint; no frontend source changed in this launch follow-up.
+
+Remaining operational acceptance: verify the GitHub-hosted run after the workflow reaches main, exercise the operator stop, review account-wide Actions budgets and quotas, and complete the staging soak/backup recovery work. The Free database and static hosting setup do not require a paid upgrade; account-wide hard budget configuration is not claimed verified.

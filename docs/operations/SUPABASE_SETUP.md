@@ -1,6 +1,6 @@
 # Option 4 — database search prototype and setup
 
-Status: the hosted Free project `icrmnklkrmskooeuemjg` is provisioned in Sydney and the public static frontend is deployed at https://golf-booker-beta.pages.dev. Anonymous RPC/table-denial checks pass; courses remain disabled pending source acceptance. Current evidence and remaining billing gates are in [Sprint 3 status](../SPRINT_3_STATUS.md).
+Status: the hosted Free project `icrmnklkrmskooeuemjg` is provisioned in Sydney and the public static frontend is deployed at https://golf-booker-beta.pages.dev. Anonymous RPC/table-denial checks pass. Mandalay is enabled after complete hosted collection; Morack remains disabled. Current evidence and remaining operational/billing checks are in [Sprint 3 status](../SPRINT_3_STATUS.md).
 
 ## Deploy the database
 

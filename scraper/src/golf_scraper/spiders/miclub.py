@@ -69,7 +69,17 @@ def parse_miclub_timesheet(
         # Empty sheets need a positively identified empty-state marker. An
         # unrecognised/login/changed layout must never erase stored availability.
         empty = selector.css(".teetime-day-table .no-tee-times")
-        if not empty or "no tee times available" not in empty.xpath("string(.)").get("").lower():
+        explicit_empty = bool(empty) and "no tee times available" in empty.xpath("string(.)").get("").lower()
+        # Captured live Mandalay empty sheet: the all-times filter is selected,
+        # and the provider renders its scoped no-rows panel inside the sheet.
+        no_rows = selector.css(".teetime-day-table #no-rows")
+        provider_empty = (
+            bool(selector.css('input.all_filter[checked]'))
+            and " ".join(no_rows.xpath("string(.)").get("").split())
+                == "No rows meeting selected criteria. Show All"
+            and no_rows.css('a::text').get("").strip() == "Show All"
+        )
+        if not (explicit_empty or provider_empty):
             raise ValueError("timesheet has no recognised rows or verified empty marker")
     groups = {}
     for row in rows:

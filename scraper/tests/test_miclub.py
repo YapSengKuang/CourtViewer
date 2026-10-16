@@ -62,6 +62,21 @@ def test_response_for_wrong_date_fails_only_its_expected_partition():
     assert sum(p.status == 'pending' for p in spider.coverage.partitions.values()) == 29
 
 
+def test_live_mandalay_empty_requires_unfiltered_provider_marker():
+    import pytest
+    from pathlib import Path
+    course = next(c for c in load_catalog().courses if c.id == 'club-mandalay')
+    html = (Path(__file__).parent / 'fixtures/mandalay_empty_timesheet.html').read_text()
+    def parse(body):
+        return parse_miclub_timesheet(body, course, holes=18, booking_url=course.booking_url, now=NOW)
+    assert parse(html) == []
+    for broken in (html.replace(' checked', ''),
+                   html.replace('No rows meeting selected criteria.', 'Please sign in.'),
+                   html.replace('teetime-day-table', 'unrelated-panel')):
+        with pytest.raises(ValueError, match='no recognised rows'):
+            parse(broken)
+
+
 def test_morack_captured_midweek_sheet_keeps_standard_fee_only():
     from pathlib import Path
     course = next(c for c in load_catalog(Path(__file__).parents[1] / 'courses.beta.yaml').courses if c.id == 'morack')

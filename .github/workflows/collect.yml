@@ -2,6 +2,8 @@ name: Collect public tee times
 
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '7,22,37,52 * * * *'
 
 permissions:
   contents: read
@@ -26,10 +28,11 @@ jobs:
       - name: Collect verified candidate sources
         env:
           DATABASE_URL: ${{ secrets.GOLF_DATABASE_URL }}
-          COURSES_YAML: scraper/courses.beta.yaml
+          COURSES_YAML: scraper/courses.mandalay.yaml
         run: |
           test -n "$DATABASE_URL"
+          python -m golf_scraper.maintenance
           python -m golf_scraper.run_all
 
-# Scheduling remains off until source parity, retention and quota checks pass.
+# The operator variable must remain true for either scheduled or manual runs.
 # No artifacts, dependency cache, paid runner, or deployment token is used.
