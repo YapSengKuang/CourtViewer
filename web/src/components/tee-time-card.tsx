@@ -3,10 +3,9 @@ import type { TeeTime } from "@/lib/types";
 
 type TeeTimeCardProps = {
   teeTime: TeeTime;
-  updatedAt: string | null;
 };
 
-export function TeeTimeCard({ teeTime, updatedAt }: TeeTimeCardProps) {
+export function TeeTimeCard({ teeTime }: TeeTimeCardProps) {
   const location = teeTime.address ?? "Address not listed yet";
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-line bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -16,11 +15,11 @@ export function TeeTimeCard({ teeTime, updatedAt }: TeeTimeCardProps) {
         <p className="text-sm text-muted">{location}</p>
         <p className="mt-2 text-sm text-muted">
           {teeTime.holes} holes · {formatSpots(teeTime.spots_available)} ·{" "}
-          {formatUpdated(updatedAt ?? teeTime.scraped_at)}
+          {formatUpdated(teeTime.scraped_at)}
         </p>
       </div>
       <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
-        <p className="text-xl font-semibold">{formatPrice(teeTime.price_per_player, teeTime.currency)}</p>
+        <p className="text-xl font-semibold">{formatPrice(teeTime.price_per_player, teeTime.currency)}<span className="block text-sm font-normal text-muted">per player / round</span></p>
         <a
           className="inline-flex h-11 items-center justify-center rounded-full bg-fairway px-5 text-sm font-medium text-fairway-ink"
           href={teeTime.booking_url}

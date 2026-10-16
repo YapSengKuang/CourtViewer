@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from sqlalchemy import (
     CheckConstraint,
+    Boolean,
     DateTime,
     Double,
     ForeignKey,
@@ -35,6 +36,7 @@ class Course(Base):
     platform: Mapped[str] = mapped_column(String(64), nullable=False)
     timezone: Mapped[str] = mapped_column(String(64), nullable=False)
     booking_url: Mapped[str | None] = mapped_column(Text, nullable=True)
+    public_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
 
     tee_times: Mapped[list["TeeTime"]] = relationship(back_populates="course")
     scrape_run: Mapped["ScrapeRun | None"] = relationship(

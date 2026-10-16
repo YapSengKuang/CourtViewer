@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { TeeTimeCard } from "@/components/tee-time-card";
 import { fetchHealth, searchTeeTimes } from "@/lib/api";
 import { todayInputValue } from "@/lib/format";
@@ -20,20 +20,13 @@ export function SearchPage() {
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
   const [health, setHealth] = useState<CourseHealth[]>([]);
   const [message, setMessage] = useState<string | null>(null);
+  const requestId = useRef(0);
 
   useEffect(() => {
     // The prerender cannot call new Date() during render. The browser fills the date after mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- local calendar date is only known in the browser
     setDate(todayInputValue(new Date()));
   }, []);
-
-  const updatedBySlug = useMemo(() => {
-    const map = new Map<string, string | null>();
-    for (const course of health) {
-      map.set(course.slug, course.last_success_at);
-    }
-    return map;
-  }, [health]);
 
   const ordered = useMemo(() => {
     const copy = [...teeTimes];
@@ -50,6 +43,7 @@ export function SearchPage() {
   }, [sort, teeTimes]);
 
   async function runSearch(input: SearchInput) {
+    const id = ++requestId.current;
     setStatus("loading");
     setMessage(null);
     try {
@@ -57,26 +51,30 @@ export function SearchPage() {
         searchTeeTimes(input),
         fetchHealth().catch(() => [] as CourseHealth[]),
       ]);
+      if (id !== requestId.current) return;
       setTeeTimes(times);
       setHealth(healthRows);
       setStatus("ready");
     } catch {
+      if (id !== requestId.current) return;
       setTeeTimes([]);
       setStatus("error");
-      setMessage("The tee time service is not reachable. Start the API and try again.");
+      setMessage("The tee time service is temporarily unavailable. Please try again later.");
     }
   }
 
   function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // An invalid new submission must also invalidate an older in-flight search.
+    requestId.current += 1;
     if (timeFrom > timeTo) {
       setStatus("error");
       setMessage("The start of the window has to be before the end.");
       return;
     }
-    if (!Number.isFinite(players) || players < 1) {
+    if (!Number.isInteger(players) || players < 1 || players > 4) {
       setStatus("error");
-      setMessage("Enter at least 1 player.");
+      setMessage("Enter between 1 and 4 players.");
       return;
     }
     void runSearch({ date, timeFrom, timeTo, holes, players });
@@ -101,6 +99,7 @@ export function SearchPage() {
             className={fieldClass}
             type="number"
             min={1}
+            max={4}
             value={players}
             required
             onChange={(event) => setPlayers(event.target.valueAsNumber)}
@@ -131,6 +130,12 @@ export function SearchPage() {
       </form>
 
       <section aria-live="polite" className="flex flex-col gap-3">
+        {status === "ready" && (health.length === 0 || health.some((course) => course.last_error || !course.last_success_at)) ? (
+          <p className="text-muted">Course coverage is unavailable or incomplete. An empty result does not confirm all courses are fully booked.</p>
+        ) : null}
+        {status === "ready" && teeTimes.length >= 200 ? (
+          <p className="text-muted">Showing the first 200 tee times. Narrow your time window for more specific results.</p>
+        ) : null}
         {status === "ready" && ordered.length > 0 ? (
           <div className="flex gap-2">
             <SortButton current={sort} value="starts_at" onSelect={setSort}>
@@ -153,7 +158,6 @@ export function SearchPage() {
               <TeeTimeCard
                 key={`${teeTime.course_slug}-${teeTime.starts_at}-${teeTime.holes}`}
                 teeTime={teeTime}
-                updatedAt={updatedBySlug.get(teeTime.course_slug) ?? null}
               />
             ))
           : null}

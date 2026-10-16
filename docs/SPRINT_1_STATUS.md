@@ -40,3 +40,15 @@ Sources checked: [Glen Waverley](https://www.golf-booking.com/en/club/glen-waver
 Do not describe Sprint 1 as complete until live-source feasibility, quota evidence, production build and owner decisions have been recorded.
 
 Morack and Glen Waverley robots URLs could not be retrieved by the web inspection tool; no robots/access approval is inferred. Web extraction can be cached, so live day +14 availability remains unverified.
+
+## Second implementation batch — Supabase search prototype
+
+- Added Alembic `0002_public_search` and the operator-managed `courses.public_enabled` flag, defaulting false without changing existing course visibility in the legacy development API. Production RPCs return only explicitly enabled courses; seeds do not override this flag.
+- Added `golf_search` and sanitised `golf_health` JSON RPCs. The search validates inputs, enforces inclusive day +14 per-course local dates, filters freshness/future starts/capacity, and bounds responses and offset. It returns an ordered time subset; complete pagination/price ordering and partition-level coverage remain follow-up work.
+- Enabled RLS on application tables, removed PUBLIC function execution and anonymous/authenticated direct table access, and granted only the two explicit RPCs to Supabase's anonymous role when that role exists. Verified a restricted test role can call search but cannot read or modify application tables. No courses were publicly enabled.
+- Added frontend Supabase publishable-key configuration, generic errors, a ten-second client request timeout, bounded search requests and checks against accidental localhost fallback for incomplete configuration. Retained local FastAPI mode. Cards use slot observation age and price-per-player/round labels; older search requests cannot overwrite a newer submission. Incomplete/unknown course health and result truncation are disclosed.
+- Added [setup, permission review and emergency-disable instructions](operations/SUPABASE_SETUP.md), an example frontend environment file and client contract tests in CI.
+
+Verification: **56 Python tests passed, zero skipped**, and **four frontend client tests passed**; lint, TypeScript and diff checks passed. Production build was retried and remains blocked by the same local Turbopack CSS-worker port-binding permission error. No successful static artifact or live Supabase/PostgREST HTTP test is claimed. Supabase timeout/quota controls and provider billing settings have not been applied.
+
+Next: verify hosted RPC integration and total API exposure, configure anonymous query timeout and usage limits, complete production source parameters/live fixtures, measure source/runtime/egress costs, and resolve the static build gate in an environment permitting the required build processes. The source identity and safe partition reconciliation blockers remain prerequisites to enabling production data. Sprint 1 remains in progress.
