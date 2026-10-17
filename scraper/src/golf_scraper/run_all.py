@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 
 RUN_LOCK_KEY = 71920261016
 RUN_BUDGET_SECONDS = 540
-SPIDER_TIMEOUT_SECONDS = 120
+# Includes publication round trips from hosted runners to the Sydney database.
+# Keep this below the overall nine-minute budget and ten-minute Actions limit.
+SPIDER_TIMEOUT_SECONDS = 300
 
 
 def scraper_root() -> Path:
@@ -84,7 +86,7 @@ def run_spider(name: str, timeout: float = SPIDER_TIMEOUT_SECONDS) -> int:
     started = datetime.now(timezone.utc)
     try:
         completed = subprocess.run(
-            [sys.executable, "-m", "scrapy", "crawl", name],
+            [sys.executable, "-m", "scrapy", "crawl", name, "-s", "LOG_LEVEL=INFO"],
             cwd=scraper_root(), check=False, timeout=timeout,
         )
     except subprocess.TimeoutExpired:
