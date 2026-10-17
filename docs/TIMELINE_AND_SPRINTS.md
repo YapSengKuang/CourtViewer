@@ -43,6 +43,8 @@ Exit: a verified sold-out partition clears obsolete availability; failed/incompl
 
 ## Sprint 3 — deliver the multi-site beta
 
+Scope update, 16 October 2026: the owner approved a Mandalay-only first beta, with Morack/Glen Waverley following afterward. P10's remaining integration work moves to the follow-up backlog. Initial public hosting and bounded collection are brought forward to support this beta. The original calendar below remains an estimate, not the actual implementation dates.
+
 Goal: users can search verified sources and understand result coverage.
 
 | Work item | Estimate | Dependency |

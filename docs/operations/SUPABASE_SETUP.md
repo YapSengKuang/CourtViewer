@@ -1,6 +1,6 @@
 # Option 4 — database search prototype and setup
 
-Status: implemented and tested on local Postgres; not yet verified against a hosted Supabase/PostgREST instance. No provider account or billing settings have been changed.
+Status: the hosted Free project `icrmnklkrmskooeuemjg` is provisioned in Sydney and the public static frontend is deployed at https://golf-booker-beta.pages.dev. Anonymous RPC/table-denial checks pass. Mandalay is enabled after complete hosted collection; Morack remains disabled. Current evidence and remaining operational/billing checks are in [Sprint 3 status](../SPRINT_3_STATUS.md).
 
 ## Deploy the database
 
@@ -39,11 +39,11 @@ Search JSON arguments: `p_date` (ISO date), `p_time_from`/`p_time_to` (local clo
 
 The prototype excludes disabled courses, past slots, slots older than 60 minutes, future observation timestamps, insufficient capacity, non-HTTPS booking links and dates outside local today through +14. Inputs outside bounds raise SQLSTATE `22023`. A date outside all enabled course horizons is rejected; courses with a different local date are individually excluded when their horizon does not contain the requested date. No enabled courses returns an empty dataset. Health exposes a generic error message rather than raw scraper details.
 
-The web currently requests up to the first 200 results and sorts this subset locally; it shows a narrowing message at the cap. Server-side price sorting, course selection, pagination controls and precise partition coverage remain later work. Health is course-level summary, not proof of full date coverage. Slot cards now use the slot's own observation time.
+The deployed Sprint 3 web uses `golf_search_v2`, server-side sorting, course selection, 100-row pages and date partition coverage, described below. Health is still a course-level summary, not proof of full date coverage. Slot cards use the slot's own observation time.
 
 ## Cost controls and emergency stop
 
-Free plans/provider blocking are the billing boundary. The query limits cap response size, not total traffic. Configure a short statement timeout for the anonymous API role through the hosted provider's supported role/API configuration; verify with an intentionally slow test query in staging. No timeout or rate-limiting configuration is claimed applied by this migration. Browser timeouts do not cancel database work reliably. Public direct API traffic bypasses UI throttling, so monitor quotas and test the disable procedure.
+Free plans/provider blocking are the billing boundary. The query limits cap response size, not total traffic. The hosted anonymous role now has `statement_timeout=3s` and `lock_timeout=1s`, confirmed in role configuration; dedicated slow-query cancellation verification remains pending. No request-rate limit is configured. Browser timeouts do not cancel database work reliably. Public direct API traffic bypasses UI throttling, so monitor quotas and test the disable procedure.
 
 Disable the complete public search surface with a trusted database connection:
 
@@ -57,3 +57,16 @@ This takes effect for subsequent permission checks; it does not cancel already r
 Before launch: verify actual anonymous HTTP calls, table read/write denial, invalid-parameter responses, statement timeout, total API exposure, public-key-only configuration, Free billing state and quota alerts. Measure scrape runtime and database egress on the real sources. The remaining release blockers are tracked in [Sprint 1 status](../SPRINT_1_STATUS.md).
 
 Primary references: [Supabase database functions](https://supabase.com/docs/guides/database/functions), [securing the Data API](https://supabase.com/docs/guides/api/securing-your-api).
+
+## Sprint 3 API update
+
+Apply migration `0004_beta_search` before publishing the new frontend. It calls `golf_search_v2` with the previous arguments plus `p_sort` (`starts_at` or `price`) and optional `p_course_slug`. Responses add `has_more` and sanitised per-course date `coverage`; the default client page is 100 rows. `golf_courses` supplies enabled-course names, timezone and inclusive local date bounds. `golf_coverage` is an internal helper with no public execute grant. The v1 RPC remains for older clients.
+
+Emergency public disable must now also revoke:
+
+```sql
+REVOKE EXECUTE ON FUNCTION public.golf_search_v2(date,time,time,integer,integer,integer,integer,text,text) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.golf_courses() FROM anon;
+```
+
+Apply these in addition to the v1 search/health revocations above; verify no other inherited grants reopen access. Review/verify all four public entry points on the actual hosted instance before enabling courses. Nothing in this migration changes provider billing or rate-limit settings.

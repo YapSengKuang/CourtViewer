@@ -69,6 +69,9 @@ def search_tee_times(
     holes: int | None = None,
     players: int = Query(..., ge=1),
     sort: Literal["starts_at", "price"] = "starts_at",
+    course_slug: str | None = None,
+    limit: int = Query(100, ge=1, le=200),
+    offset: int = Query(0, ge=0, le=10000),
     session: Session = Depends(get_session),
     now: datetime = Depends(get_now),
 ) -> TeeTimeList:
@@ -76,10 +79,17 @@ def search_tee_times(
         raise HTTPException(status_code=422, detail="holes must be 9 or 18")
     if time_from > time_to:
         raise HTTPException(status_code=422, detail="time_from must be at or before time_to")
+    if players > 4:
+        raise HTTPException(status_code=422, detail="players must be between 1 and 4")
 
-    courses = session.scalars(select(Course)).all()
+    courses = session.scalars(select(Course).where(Course.slug == course_slug) if course_slug else select(Course)).all()
+    if course_slug and not courses:
+        raise HTTPException(status_code=422, detail="unknown course")
     windows = []
     for course in courses:
+        today = now.astimezone(ZoneInfo(course.timezone)).date()
+        if not today <= date <= today + timedelta(days=14):
+            continue
         start = _local_bound(course.timezone, date, time_from)
         end = _local_bound(course.timezone, date, time_to)
         windows.append(
@@ -98,12 +108,15 @@ def search_tee_times(
         .join(Course, Course.id == TeeTime.course_id)
         .where(TeeTime.spots_available >= players)
         .where(TeeTime.scraped_at >= fresh_after)
+        .where(TeeTime.scraped_at <= now)
+        .where(TeeTime.starts_at > now)
         .where(or_(*windows))
     )
     if holes is not None:
         statement = statement.where(TeeTime.holes == holes)
     if sort == "price":
         statement = statement.order_by(
+            TeeTime.currency,
             TeeTime.price_per_player,
             TeeTime.starts_at,
             Course.name,
@@ -113,7 +126,7 @@ def search_tee_times(
         statement = statement.order_by(TeeTime.starts_at, Course.name, TeeTime.holes)
 
     tee_times: list[TeeTimeOut] = []
-    for slot, course in session.execute(statement):
+    for slot, course in session.execute(statement.limit(limit + 1).offset(offset)):
         zone = ZoneInfo(course.timezone)
         tee_times.append(
             TeeTimeOut(
@@ -135,4 +148,4 @@ def search_tee_times(
                 scraped_at=slot.scraped_at,
             )
         )
-    return TeeTimeList(tee_times=tee_times)
+    return TeeTimeList(tee_times=tee_times[:limit], has_more=len(tee_times) > limit)

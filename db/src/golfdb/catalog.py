@@ -1,4 +1,5 @@
 import re
+import os
 from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -117,6 +118,14 @@ class CourseCatalog(BaseModel):
 
 
 def load_catalog(path: Path | None = None) -> CourseCatalog:
-    catalog_path = path or default_catalog_path()
+    if path is None:
+        from golfdb.session import load_local_env
+        load_local_env()
+        override = os.environ.get("COURSES_YAML")
+        catalog_path = Path(override) if override else default_catalog_path()
+        if not catalog_path.is_absolute():
+            catalog_path = repo_root() / catalog_path
+    else:
+        catalog_path = path
     raw = yaml.safe_load(catalog_path.read_text())
     return CourseCatalog.model_validate(raw)

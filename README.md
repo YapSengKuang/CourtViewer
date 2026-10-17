@@ -11,6 +11,7 @@ Booking is not handled here. Each result will deep-link to the course's own book
 - [Timeline and proposed sprints](docs/TIMELINE_AND_SPRINTS.md)
 - [Sprint 1 implementation status and remaining work](docs/SPRINT_1_STATUS.md)
 - [Sprint 2 implementation status](docs/SPRINT_2_STATUS.md)
+- [Sprint 3 beta progress and source findings](docs/SPRINT_3_STATUS.md)
 - [Collection migration and recovery](docs/operations/COLLECTION.md)
 
 These documents reflect a source review on 16 October 2026 and distinguish existing code from proposed work. The historical phase notes below predate the MiClub adapter and Club Mandalay catalog entry; live source reliability still needs verification.

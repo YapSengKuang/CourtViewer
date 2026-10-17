@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { TeeTimeCard } from "@/components/tee-time-card";
-import { fetchHealth, searchTeeTimes } from "@/lib/api";
+import { fetchCourses, searchAvailability } from "@/lib/api";
 import { todayInputValue } from "@/lib/format";
-import type { CourseHealth, HolesChoice, SearchInput, SortChoice, TeeTime } from "@/lib/types";
+import type { CourseChoice, CoverageStatus, HolesChoice, SearchInput, SortChoice, TeeTime } from "@/lib/types";
 
 const fieldClass =
   "h-11 w-full rounded-xl border border-line bg-card px-3 text-base text-foreground";
@@ -18,7 +18,12 @@ export function SearchPage() {
   const [sort, setSort] = useState<SortChoice>("starts_at");
   const [status, setStatus] = useState<"idle" | "loading" | "ready" | "error">("idle");
   const [teeTimes, setTeeTimes] = useState<TeeTime[]>([]);
-  const [health, setHealth] = useState<CourseHealth[]>([]);
+  const [courses, setCourses] = useState<CourseChoice[]>([]);
+  const [courseSlug, setCourseSlug] = useState("");
+  const [coverage, setCoverage] = useState<CoverageStatus[]>([]);
+  const [hasMore, setHasMore] = useState(false);
+  const [submitted, setSubmitted] = useState<SearchInput | null>(null);
+  const [page, setPage] = useState(0);
   const [message, setMessage] = useState<string | null>(null);
   const requestId = useRef(0);
 
@@ -26,34 +31,27 @@ export function SearchPage() {
     // The prerender cannot call new Date() during render. The browser fills the date after mount.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- local calendar date is only known in the browser
     setDate(todayInputValue(new Date()));
+    let active = true;
+    fetchCourses().then((rows) => { if (active) setCourses(rows); }).catch(() => {});
+    return () => { active = false; requestId.current += 1; };
   }, []);
 
-  const ordered = useMemo(() => {
-    const copy = [...teeTimes];
-    copy.sort((left, right) => {
-      if (sort === "price") {
-        const priceDelta = Number(left.price_per_player) - Number(right.price_per_player);
-        if (priceDelta !== 0) {
-          return priceDelta;
-        }
-      }
-      return left.starts_at.localeCompare(right.starts_at);
-    });
-    return copy;
-  }, [sort, teeTimes]);
+  const selected = courses.find((course) => course.slug === courseSlug);
+  const minDate = selected?.date_from ?? courses.map((course) => course.date_from).filter(Boolean).sort()[0];
+  const maxDate = selected?.date_to ?? courses.map((course) => course.date_to).filter(Boolean).sort().at(-1);
 
   async function runSearch(input: SearchInput) {
     const id = ++requestId.current;
     setStatus("loading");
     setMessage(null);
     try {
-      const [times, healthRows] = await Promise.all([
-        searchTeeTimes(input),
-        fetchHealth().catch(() => [] as CourseHealth[]),
-      ]);
+      const result = await searchAvailability(input);
       if (id !== requestId.current) return;
-      setTeeTimes(times);
-      setHealth(healthRows);
+      setTeeTimes(result.tee_times);
+      setCoverage(result.coverage);
+      setHasMore(result.has_more);
+      setSubmitted(input);
+      setPage(Math.floor((input.offset ?? 0) / 100));
       setStatus("ready");
     } catch {
       if (id !== requestId.current) return;
@@ -77,7 +75,7 @@ export function SearchPage() {
       setMessage("Enter between 1 and 4 players.");
       return;
     }
-    void runSearch({ date, timeFrom, timeTo, holes, players });
+    void runSearch({ date, timeFrom, timeTo, holes, players, courseSlug, sort, offset: 0 });
   }
 
   return (
@@ -91,7 +89,7 @@ export function SearchPage() {
       <form className="grid grid-cols-1 gap-3 sm:grid-cols-2" onSubmit={onSubmit}>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Date
-          <input className={fieldClass} type="date" value={date} required onChange={(event) => setDate(event.target.value)} />
+          <input className={fieldClass} type="date" value={date} min={minDate} max={maxDate} required onChange={(event) => setDate(event.target.value)} />
         </label>
         <label className="flex flex-col gap-1 text-sm font-medium">
           Players
@@ -121,6 +119,21 @@ export function SearchPage() {
             <option value="18">18</option>
           </select>
         </label>
+        <label className="flex flex-col gap-1 text-sm font-medium">
+          Course
+          <select className={fieldClass} value={courseSlug} onChange={(event) => setCourseSlug(event.target.value)}>
+            <option value="">All courses</option>
+            {courses.map((course) => <option key={course.slug} value={course.slug}>{course.name}</option>)}
+          </select>
+        </label>
+        <label className="flex flex-col gap-1 text-sm font-medium">
+          Sort results
+          <select className={fieldClass} value={sort} onChange={(event) => setSort(event.target.value as SortChoice)}>
+            <option value="starts_at">Time</option>
+            <option value="price">Currency, then price</option>
+          </select>
+        </label>
+        <p className="text-sm text-muted sm:col-span-2">Choose today through two weeks ahead. Times are local to each course. Final availability is confirmed on the course website.</p>
         <button
           className="h-11 rounded-full bg-fairway text-sm font-medium text-fairway-ink sm:col-span-2"
           type="submit"
@@ -130,66 +143,40 @@ export function SearchPage() {
       </form>
 
       <section aria-live="polite" className="flex flex-col gap-3">
-        {status === "ready" && (health.length === 0 || health.some((course) => course.last_error || !course.last_success_at)) ? (
-          <p className="text-muted">Course coverage is unavailable or incomplete. An empty result does not confirm all courses are fully booked.</p>
+        {status === "ready" ? (
+          <p className="text-muted">{coverage.length > 0
+            ? `${coverage.filter((course) => course.status === "complete").length} of ${coverage.length} courses have fresh, complete date coverage.`
+            : "Date coverage is unknown. An empty result does not confirm all courses are fully booked."}</p>
         ) : null}
-        {status === "ready" && teeTimes.length >= 200 ? (
-          <p className="text-muted">Showing the first 200 tee times. Narrow your time window for more specific results.</p>
-        ) : null}
-        {status === "ready" && ordered.length > 0 ? (
-          <div className="flex gap-2">
-            <SortButton current={sort} value="starts_at" onSelect={setSort}>
-              Time
-            </SortButton>
-            <SortButton current={sort} value="price" onSelect={setSort}>
-              Price
-            </SortButton>
-          </div>
+        {status === "ready" && coverage.some((course) => course.status !== "complete") ? (
+          <ul className="text-sm text-muted">{coverage.filter((course) => course.status !== "complete").map((course) => (
+            <li key={course.slug}>{course.name}: {course.status === "outside_horizon" ? "outside booking horizon" : course.status === "unchecked" ? "not checked for this date" : "partially checked, stale or unavailable"}</li>
+          ))}</ul>
         ) : null}
         {status === "loading" ? <p className="text-muted">Searching tee times…</p> : null}
         {status === "error" && message ? <p className="text-fairway">{message}</p> : null}
-        {status === "ready" && ordered.length === 0 ? (
+        {status === "ready" && teeTimes.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-line bg-card px-4 py-8 text-center text-muted">
             No tee times in that window.
           </p>
         ) : null}
         {status === "ready"
-          ? ordered.map((teeTime) => (
+          ? teeTimes.map((teeTime) => (
               <TeeTimeCard
                 key={`${teeTime.course_slug}-${teeTime.starts_at}-${teeTime.holes}-${teeTime.source_partition}-${teeTime.source_slot_key}`}
                 teeTime={teeTime}
               />
             ))
           : null}
+        {status === "ready" && page >= 100 && hasMore ? <p>Narrow your search window to see more results.</p> : null}
+        {status === "ready" && submitted && (page > 0 || hasMore) ? (
+          <nav aria-label="Search result pages" className="flex items-center justify-between gap-4">
+            <button className="h-11 px-4 disabled:opacity-40" disabled={page === 0} onClick={() => void runSearch({ ...submitted, offset: (page - 1) * 100 })}>Previous</button>
+            <span>Page {page + 1}</span>
+            <button className="h-11 px-4 disabled:opacity-40" disabled={!hasMore || page >= 100} onClick={() => void runSearch({ ...submitted, offset: (page + 1) * 100 })}>Next</button>
+          </nav>
+        ) : null}
       </section>
     </main>
-  );
-}
-
-function SortButton({
-  current,
-  value,
-  onSelect,
-  children,
-}: {
-  current: SortChoice;
-  value: SortChoice;
-  onSelect: (value: SortChoice) => void;
-  children: string;
-}) {
-  const selected = current === value;
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      className={
-        selected
-          ? "h-10 rounded-full bg-foreground px-4 text-sm font-medium text-background"
-          : "h-10 rounded-full border border-line bg-card px-4 text-sm font-medium"
-      }
-      onClick={() => onSelect(value)}
-    >
-      {children}
-    </button>
   );
 }

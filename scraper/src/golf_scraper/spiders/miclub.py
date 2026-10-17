@@ -20,7 +20,23 @@ from golfdb.catalog import CourseSpec, load_catalog
 
 PLATFORM = "miclub"
 FIXTURE_NAME = "miclub_timesheet.html"
-DATE_RE = re.compile(r"var selectedDate = '(\d{2})-(\d{2})-(\d{4})'")
+DATE_RE = re.compile(r"var selectedDate = '([^']+)'")
+
+
+def sheet_date(html: str) -> date:
+    match = DATE_RE.search(html)
+    if not match:
+        raise ValueError("miclub timesheet is missing selectedDate")
+    value = match[1]
+    try:
+        return datetime.strptime(value, "%d-%m-%Y").date()
+    except ValueError:
+        parts = value.split()
+        if len(parts) != 6:
+            raise ValueError("unrecognised selectedDate")
+        return datetime.strptime(f"{parts[1]} {parts[2]} {parts[5]}", "%b %d %Y").date()
+
+
 TIME_RE = re.compile(r"(\d{1,2}):(\d{2})\s*(am|pm)", re.I)
 PRICE_RE = re.compile(r"\$(\d+(?:\.\d+)?)")
 
@@ -42,12 +58,9 @@ def parse_miclub_timesheet(
     now: datetime,
 ) -> list[TeeTimeItem]:
     """Read complete sheets, preserving each provider row as a bookable group."""
-    match = DATE_RE.search(html)
-    if match is None:
-        raise ValueError("miclub timesheet is missing selectedDate")
+    day = sheet_date(html)
     if "</html>" not in html.lower():
         raise ValueError("incomplete timesheet document")
-    day = date(int(match.group(3)), int(match.group(2)), int(match.group(1)))
     window_start, window_end = scrape_window(course.timezone, now)
     zone = ZoneInfo(course.timezone)
     selector = Selector(text=html)
@@ -56,7 +69,17 @@ def parse_miclub_timesheet(
         # Empty sheets need a positively identified empty-state marker. An
         # unrecognised/login/changed layout must never erase stored availability.
         empty = selector.css(".teetime-day-table .no-tee-times")
-        if not empty or "no tee times available" not in empty.xpath("string(.)").get("").lower():
+        explicit_empty = bool(empty) and "no tee times available" in empty.xpath("string(.)").get("").lower()
+        # Captured live Mandalay empty sheet: the all-times filter is selected,
+        # and the provider renders its scoped no-rows panel inside the sheet.
+        no_rows = selector.css(".teetime-day-table #no-rows")
+        provider_empty = (
+            bool(selector.css('input.all_filter[checked]'))
+            and " ".join(no_rows.xpath("string(.)").get("").split())
+                == "No rows meeting selected criteria. Show All"
+            and no_rows.css('a::text').get("").strip() == "Show All"
+        )
+        if not (explicit_empty or provider_empty):
             raise ValueError("timesheet has no recognised rows or verified empty marker")
     groups = {}
     for row in rows:
@@ -72,7 +95,7 @@ def parse_miclub_timesheet(
         spots = len(row.css("div.cell-available"))
         if spots == 0:
             continue  # A recognised sold-out row verifies coverage, not availability.
-        price = _public_price(row)
+        price = _public_price(row, course)
         if price is None:
             raise ValueError("available row missing public adult price")
         if not (window_start <= starts_at < window_end) or starts_at < now:
@@ -158,8 +181,7 @@ class MiClubSpider(scrapy.Spider):
         booking_url = response.url
         key = response.meta["partition_key"]
         try:
-            match = DATE_RE.search(response.text)
-            if not match or date(int(match[3]), int(match[2]), int(match[1])) != response.meta["expected_date"]:
+            if sheet_date(response.text) != response.meta["expected_date"]:
                 raise ValueError("response date does not match requested partition")
             items = parse_miclub_timesheet(
                 response.text,
@@ -201,11 +223,18 @@ def _starts_at(row: Selector, day: date, zone: ZoneInfo) -> datetime | None:
     return local.astimezone(timezone.utc)
 
 
-def _public_price(row: Selector) -> str | None:
+def _public_price(row: Selector, course: CourseSpec) -> str | None:
     for item in row.css(".fees-wrapper li"):
         label = " ".join(part.strip() for part in item.css("::text").getall())
         lowered = label.lower()
-        if "public" not in lowered or "junior" in lowered:
+        configured = course.params.get("public_fee_labels", [])
+        fee_label = " ".join(PRICE_RE.sub("", lowered).split())
+        if "junior" in lowered or "concession" in lowered:
+            continue
+        if configured:
+            if fee_label not in [label.lower() for label in configured]:
+                continue
+        elif "public" not in lowered:
             continue
         price = PRICE_RE.search(label)
         if price is not None:

@@ -16,7 +16,7 @@ from tee_api.main import app
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ALEMBIC_INI = REPO_ROOT / "db" / "alembic.ini"
-NOW = datetime(2026, 10, 10, 18, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 10, 10, 10, 0, tzinfo=timezone.utc)
 
 
 @pytest.fixture

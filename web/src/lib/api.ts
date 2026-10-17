@@ -1,4 +1,4 @@
-import type { CourseHealth, SearchInput, TeeTime } from "@/lib/types";
+import type { CourseChoice, CourseHealth, SearchInput, SearchResult, TeeTime } from "@/lib/types";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -19,24 +19,33 @@ async function rpc<T>(name: string, args: Record<string, unknown> = {}): Promise
 }
 
 export async function searchTeeTimes(input: SearchInput): Promise<TeeTime[]> {
+  return (await searchAvailability(input)).tee_times;
+}
+
+export async function searchAvailability(input: SearchInput): Promise<SearchResult> {
   if (SUPABASE_URL || SUPABASE_KEY) {
-    const body = await rpc<{ tee_times: TeeTime[] }>("golf_search", {
+    return rpc<SearchResult>("golf_search_v2", {
       p_date: input.date,
       p_time_from: input.timeFrom,
       p_time_to: input.timeTo,
       p_players: input.players,
       p_holes: input.holes === "any" ? null : Number(input.holes),
-      p_limit: 200,
-      p_offset: 0,
+      p_limit: 100,
+      p_offset: input.offset ?? 0,
+      p_sort: input.sort ?? "starts_at",
+      p_course_slug: input.courseSlug || null,
     });
-    return body.tee_times;
   }
   const params = new URLSearchParams({
     date: input.date,
     time_from: input.timeFrom,
     time_to: input.timeTo,
     players: String(input.players),
+    sort: input.sort ?? "starts_at",
+    limit: "100",
+    offset: String(input.offset ?? 0),
   });
+  if (input.courseSlug) params.set("course_slug", input.courseSlug);
   if (input.holes !== "any") {
     params.set("holes", input.holes);
   }
@@ -44,8 +53,17 @@ export async function searchTeeTimes(input: SearchInput): Promise<TeeTime[]> {
   if (!response.ok) {
     throw new Error("Search failed");
   }
-  const body = (await response.json()) as { tee_times: TeeTime[] };
-  return body.tee_times;
+  const body = (await response.json()) as Partial<SearchResult> & { tee_times: TeeTime[] };
+  return { tee_times: body.tee_times, has_more: body.has_more ?? false, coverage: body.coverage ?? [] };
+}
+
+export async function fetchCourses(): Promise<CourseChoice[]> {
+  if (SUPABASE_URL || SUPABASE_KEY) {
+    return (await rpc<{ courses: CourseChoice[] }>("golf_courses")).courses;
+  }
+  const response = await fetch(`${API_URL}/api/courses`, { signal: AbortSignal.timeout(10000) });
+  if (!response.ok) throw new Error("Course list unavailable");
+  return ((await response.json()) as { courses: CourseChoice[] }).courses;
 }
 
 export async function fetchHealth(): Promise<CourseHealth[]> {

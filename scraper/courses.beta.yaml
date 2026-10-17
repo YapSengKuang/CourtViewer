@@ -1,0 +1,38 @@
+# Candidate source configuration; does not enable public search.
+# Morack: only the captured standard midweek fee is verified; other fees fail closed.
+courses:
+- id: club-mandalay
+  name: Club Mandalay
+  address: 486 Mandalay Circuit, Beveridge, Victoria 3753
+  lat: null
+  lng: null
+  holes_options:
+  - 9
+  - 18
+  platform: miclub
+  timezone: Australia/Melbourne
+  booking_url: https://mandalay.miclub.com.au/guests/bookings/ViewPublicCalendar.msp?booking_resource_id=3000000
+  params:
+    base_url: https://mandalay.miclub.com.au
+    booking_resource_id: '3000000'
+    fee_groups:
+    - id: '5453317'
+      holes: 18
+    - id: '5453680'
+      holes: 9
+- id: morack
+  name: Morack Public Golf Course
+  address: Cnr Morack & East Roads, Vermont South VIC 3133
+  holes_options:
+  - 9
+  platform: miclub
+  timezone: Australia/Melbourne
+  booking_url: https://morack.miclub.com.au/guests/bookings/ViewPublicCalendar.msp
+  params:
+    base_url: https://morack.miclub.com.au
+    booking_resource_id: '3000000'
+    fee_groups:
+    - id: '1115048'
+      holes: 9
+    public_fee_labels:
+    - 9 Holes Midweek

@@ -60,3 +60,39 @@ def test_response_for_wrong_date_fails_only_its_expected_partition():
     partition = spider.coverage.partitions[('club-mandalay', request.meta['partition_key'])]
     assert partition.status == 'failed'
     assert sum(p.status == 'pending' for p in spider.coverage.partitions.values()) == 29
+
+
+def test_live_mandalay_empty_requires_unfiltered_provider_marker():
+    import pytest
+    from pathlib import Path
+    course = next(c for c in load_catalog().courses if c.id == 'club-mandalay')
+    html = (Path(__file__).parent / 'fixtures/mandalay_empty_timesheet.html').read_text()
+    def parse(body):
+        return parse_miclub_timesheet(body, course, holes=18, booking_url=course.booking_url, now=NOW)
+    assert parse(html) == []
+    for broken in (html.replace(' checked', ''),
+                   html.replace('No rows meeting selected criteria.', 'Please sign in.'),
+                   html.replace('teetime-day-table', 'unrelated-panel')):
+        with pytest.raises(ValueError, match='no recognised rows'):
+            parse(broken)
+
+
+def test_morack_captured_midweek_sheet_keeps_standard_fee_only():
+    from pathlib import Path
+    course = next(c for c in load_catalog(Path(__file__).parents[1] / 'courses.beta.yaml').courses if c.id == 'morack')
+    html = (Path(__file__).parent / 'fixtures/morack_timesheet.html').read_text()
+    items = parse_miclub_timesheet(html, course, holes=9,
+        booking_url=course.booking_url, now=datetime(2026, 10, 16, tzinfo=timezone.utc))
+    assert items
+    assert all(item['holes'] == 9 and Decimal(item['price_per_player']) == Decimal('27.00') for item in items)
+    assert all(item['source_slot_key'] for item in items)
+
+
+def test_morack_does_not_guess_unknown_standard_fee():
+    import pytest
+    from pathlib import Path
+    course = next(c for c in load_catalog(Path(__file__).parents[1] / 'courses.beta.yaml').courses if c.id == 'morack')
+    html = (Path(__file__).parent / 'fixtures/morack_timesheet.html').read_text().replace('9 Holes Midweek', 'Unverified Weekend Fee')
+    with pytest.raises(ValueError, match='missing public adult price'):
+        parse_miclub_timesheet(html, course, holes=9, booking_url=course.booking_url,
+            now=datetime(2026, 10, 16, tzinfo=timezone.utc))

@@ -41,6 +41,7 @@ class TeeTimeOut(BaseModel):
 
 class TeeTimeList(BaseModel):
     tee_times: list[TeeTimeOut]
+    has_more: bool = False
 
 
 class CourseHealth(BaseModel):

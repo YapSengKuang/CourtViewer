@@ -18,6 +18,7 @@ from scrapy import Spider
 from sqlalchemy import Engine, text
 
 from golfdb.session import get_engine
+from golfdb.catalog import load_catalog
 from golfdb.models import ScrapeExecution, ScrapePartition
 from sqlalchemy import select, update
 
@@ -50,7 +51,14 @@ def spider_names() -> list[str]:
                 and not value.name.startswith("scrapy")
             ):
                 names.append(value.name)
-    return sorted(set(names))
+    configured = {
+        f"custom_{course.id.replace('-', '_')}" if course.platform == 'custom' else course.platform
+        for course in load_catalog().courses
+    }
+    missing = configured - set(names)
+    if missing:
+        raise ValueError(f"catalog adapters not implemented: {', '.join(sorted(missing))}")
+    return sorted(set(names) & configured)
 
 
 def collection_outcome(name: str, since: datetime, *, interrupted: bool = False) -> int:

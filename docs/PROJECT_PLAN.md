@@ -1,6 +1,6 @@
 # Golf Booker — project plan
 
-Planning baseline: 16 October 2026. Status: proposed, based on repository inspection; live source behaviour and deployment have not been verified.
+Planning baseline: 16 October 2026. The initial Mandalay-only beta is deployed at https://golf-booker-beta.pages.dev with a Supabase Free database in Sydney. The owner approved launching Mandalay first and completing Morack/Glen Waverley afterward. Mandalay has passed a complete hosted collection; wider source acceptance and operational soak remain open. The foundation table below records the original planning baseline; current evidence is in [Sprint 3 status](SPRINT_3_STATUS.md).
 
 ## Product objective
 
@@ -27,7 +27,7 @@ The root README describes older phases and understates the current MiClub implem
 
 | ID | MVP requirement | Acceptance criterion |
 | --- | --- | --- |
-| R1 | Maintained website list | Launch catalog contains only verified real courses; synthetic entries never appear in production. Proposed launch target: three courses across at least two distinct website implementations. |
+| R1 | Maintained website list | Initial beta: Club Mandalay only, as approved by the owner on 16 October. Morack and Glen Waverley remain follow-up integrations; the later target is three courses across two website implementations. Synthetic entries never appear in production. |
 | R2 | Scheduled collection | Every enabled source is scheduled approximately every 15 minutes, subject to permitted source limits; one source failure does not prevent others running. |
 | R3 | Window search | Results fall within the inclusive requested local time bounds and selected local date, are in the future and within the collection horizon. Invalid or unsupported windows receive clear feedback. |
 | R4 | Party and holes matching | Each result supports the requested party in one bookable group and matches 9/18/either holes. Separate starting tees cannot create a false match. |
