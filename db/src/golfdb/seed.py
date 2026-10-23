@@ -43,6 +43,8 @@ def apply_seed(session: Session, courses: list[CourseSpec]) -> SeedResult:
                 platform=spec.platform,
                 timezone=spec.timezone,
                 booking_url=spec.booking_url,
+                refresh_interval_minutes=spec.params.get('refresh_interval_minutes', 15),
+                release_note=spec.params.get('release_note'),
             )
             session.add(course)
             session.flush()
@@ -58,6 +60,8 @@ def apply_seed(session: Session, courses: list[CourseSpec]) -> SeedResult:
         existing.platform = spec.platform
         existing.timezone = spec.timezone
         existing.booking_url = spec.booking_url
+        existing.refresh_interval_minutes = spec.params.get('refresh_interval_minutes', 15)
+        existing.release_note = spec.params.get('release_note')
         if existing.scrape_run is None:
             session.add(ScrapeRun(course_id=existing.id))
         updated += 1

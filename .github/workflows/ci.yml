@@ -58,4 +58,7 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+        env:
+          NEXT_PUBLIC_FREEWAY_SNAPSHOT_ENABLED: 'true'
       - run: test -s out/index.html
+      - run: test -s out/freeway-snapshot.html

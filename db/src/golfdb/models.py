@@ -37,6 +37,8 @@ class Course(Base):
     timezone: Mapped[str] = mapped_column(String(64), nullable=False)
     booking_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     public_enabled: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False, server_default=text("false"))
+    refresh_interval_minutes: Mapped[int] = mapped_column(Integer, nullable=False, default=15, server_default='15')
+    release_note: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     tee_times: Mapped[list["TeeTime"]] = relationship(back_populates="course")
     scrape_run: Mapped["ScrapeRun | None"] = relationship(
@@ -46,6 +48,7 @@ class Course(Base):
 
     __table_args__ = (
         UniqueConstraint("slug", name="uq_courses_slug"),
+        CheckConstraint('refresh_interval_minutes > 0', name='ck_courses_refresh_positive'),
         CheckConstraint(
             "lat IS NULL OR (lat >= -90 AND lat <= 90)",
             name="ck_courses_lat",

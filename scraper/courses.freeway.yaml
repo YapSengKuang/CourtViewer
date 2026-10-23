@@ -1,0 +1,22 @@
+# Candidate only: excluded from the scheduled catalog until access and live
+# acceptance are established. Never store Google attribution tokens here.
+courses:
+- id: freeway
+  name: Freeway Golf Course
+  address: 47-49 Columba St, Balwyn North VIC 3104
+  timezone: Australia/Melbourne
+  holes_options: [9, 18]
+  platform: quick18
+  booking_url: https://freeway.quick18.com/teetimes/searchmatrix
+  params:
+    collection_enabled: false
+    access_reference: docs/operations/FREEWAY_ACCESS.md
+    access_mode: agreed_public_matrix_daily
+    refresh_interval_minutes: 1440
+    release_note: "Collected once daily. Current results expire after 60 minutes. Release timing is unverified; check the provider for later dates."
+    provider_courses:
+      '1598': Freeway
+      '1599': Back 9
+    standard_rates:
+      '9 Holes': {holes: 9, id: '10537'}
+      '18 Holes': {holes: 18, id: '10539'}
