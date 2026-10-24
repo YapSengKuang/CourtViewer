@@ -1,6 +1,8 @@
 # Golf tee time aggregator
 
-Search available golf tee times. The initial public beta covers **Club Mandalay** at [golf-booker-beta.pages.dev](https://golf-booker-beta.pages.dev); Morack and Glen Waverley are follow-up integrations. Collection writes Postgres, while user searches only read bounded public database functions.
+Search available golf tee times. The public beta covers **Club Mandalay and Freeway Golf Course** at [golf-booker-beta.pages.dev](https://golf-booker-beta.pages.dev); Morack and Glen Waverley are follow-up integrations. Collection writes Postgres, while user searches only read bounded public database functions.
+
+Freeway is collected once daily under the owner-confirmed agreement; normal results expire after 60 minutes. Its [snapshot demo](https://golf-booker-beta.pages.dev/freeway-snapshot) is explicitly historical. See [delivery evidence and remaining F2 acceptance](docs/FREEWAY_DELIVERY_STATUS.md).
 
 Booking is not handled here. Each result will deep-link to the course's own booking page.
 

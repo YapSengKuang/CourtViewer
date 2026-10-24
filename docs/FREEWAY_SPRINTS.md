@@ -1,6 +1,6 @@
 # Freeway delivery sprints
 
-Planned 24 October 2026, Australia/Melbourne. Status: **planned, not started**. This is the current delivery sequence for Freeway and supersedes the original sprint calendar and earlier efficiency-first ordering. Existing implementation evidence is in [Freeway integration and scaling](FREEWAY_AND_SCALING.md).
+Planned 24 October 2026, Australia/Melbourne. Delivery update: **F1 engineering delivery published; F2 daily search enabled with open acceptance gaps**. See [delivery evidence](FREEWAY_DELIVERY_STATUS.md). The original planned tasks below are retained as acceptance criteria. This is the current delivery sequence for Freeway and supersedes the original sprint calendar and earlier efficiency-first ordering. Existing implementation evidence is in [Freeway integration and scaling](FREEWAY_AND_SCALING.md).
 
 ## Outcome and milestones
 
@@ -32,7 +32,7 @@ F1 can proceed using manually supplied page captures. F2's automated collection 
 - Last recorded checks: 58 Python tests passed, 51 database tests skipped; eight frontend tests, lint and TypeScript passed. Production build hit a worker-port restriction; a build-time dependency advisory also needs verification.
 - Not done: hosted Freeway deployment, full database validation, snapshot import/view, release-window states, live source acceptance, recurring Freeway collection or soak.
 
-Existing code is a starting asset, not a completed sprint. All task statuses below are **planned** unless explicitly identified as an external dependency.
+Existing code is a starting asset, not a completed sprint. Task tables below preserve the original plan; current completion and remaining acceptance are recorded in [delivery status](FREEWAY_DELIVERY_STATUS.md).
 
 ## F1 — Publish a clearly labelled proof of concept
 
@@ -94,4 +94,4 @@ Start the soak early in F3 so it can run alongside drills and reviews. Do not in
 
 ## Immediate next task
 
-Start **F1.1: restore a verifiable build and database-test baseline**, then implement the isolated snapshot importer/view. Keep source access moving in parallel. No automated outreach, deployment or new scheduled job was performed as part of writing this plan.
+Review the published F1 demo and finish the F2 acceptance gaps in [delivery status](FREEWAY_DELIVERY_STATUS.md), especially real empty/unreleased response evidence and release timing. Daily collection is enabled under the owner-confirmed agreement; do not exceed the agreed cadence or relax freshness.

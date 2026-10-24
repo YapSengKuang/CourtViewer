@@ -1,6 +1,6 @@
 # Freeway integration and scaling beyond ten courses
 
-Updated 24 October 2026. Freeway is a must-have next integration, ahead of the previously proposed Morack/Glen Waverley expansion.
+Original assessment, 24 October 2026. **Superseded for delivery/access status by [Freeway delivery status](FREEWAY_DELIVERY_STATUS.md): the demo is live and agreed daily search is enabled with acceptance gaps.** Freeway is a must-have next integration, ahead of the previously proposed Morack/Glen Waverley expansion.
 
 The [Freeway sprint plan](FREEWAY_SPRINTS.md) is the current delivery backlog: first a clearly labelled hosted snapshot proof of concept, then refreshed availability conditional on source access, followed by reliability and scaling measurements. The remaining steps below describe the refreshed-availability milestone; isolated snapshot demonstrations do not require enabling the live collector.
 
