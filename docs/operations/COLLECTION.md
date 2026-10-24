@@ -10,6 +10,8 @@ Migration downgrade refuses when multiple groups share one legacy time/holes key
 
 ## Running collection
 
+Mandalay's hosted workflow is scheduled every 30 minutes, at minutes 07 and 37 of each hour. GitHub can delay or drop scheduled runs, so monitor the actual observation age; the 60-minute freshness limit still applies. Freeway uses its separate once-daily workflow and agreement.
+
 Use `python -m golf_scraper.run_all` with a direct/session Postgres connection. Transaction-pooling endpoints do not preserve session advisory locks. Exit 0 means all discovered spiders have successful durable execution outcomes, exit 1 means failure/partial/missing/interrupted execution, and exit 2 means another CLI worker owns the lock. Retain request throttling and provider access policies; this does not activate a schedule.
 
 Each spider must register all expected partitions and their aware time bounds before requesting data. Each response must positively establish completeness before marking its partition complete. Missing selectors, unknown booking-cell states, mismatched dates, unexpected item scope and invalid observations fail closed. Do not infer completeness from item counts. Synthetic adapters are test fixtures, not launch sources.
