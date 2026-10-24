@@ -44,3 +44,22 @@ def test_direct_spider_cannot_use_daily_agreement(postgres, monkeypatch):
     monkeypatch.delenv('FREEWAY_DAILY_ATTEMPT_ID', raising=False)
     with pytest.raises(ValueError, match='guarded daily runner'):
         module.Quick18Spider(now=datetime.now(timezone.utc))
+
+
+def test_guarded_attempt_allows_only_agreed_matrix_requests(postgres, monkeypatch):
+    import golf_scraper.daily_freeway as daily
+    import golf_scraper.spiders.quick18 as adapter
+    catalog = load_catalog(Path(__file__).parents[1] / 'courses.freeway-live.yaml')
+    monkeypatch.setattr(daily, 'load_catalog', lambda: catalog)
+    monkeypatch.setattr(adapter, 'load_catalog', lambda: catalog)
+    def inspect_requests():
+        requests = list(adapter.Quick18Spider().iter_requests())
+        assert len(requests) == 15
+        assert all(r.url.startswith('https://freeway.quick18.com/teetimes/searchmatrix?teedate=') for r in requests)
+        assert all(r.meta['dont_obey_robotstxt'] and r.meta['dont_retry'] for r in requests)
+        return 0
+    try:
+        assert run_locked(lambda: collect_once(postgres, inspect_requests), engine=postgres) == 0
+    finally:
+        with postgres.begin() as connection:
+            connection.execute(delete(ScrapeExecution).where(ScrapeExecution.spider == MARKER))
