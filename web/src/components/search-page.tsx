@@ -4,6 +4,8 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { TeeTimeCard } from "@/components/tee-time-card";
 import { fetchCourses, searchAvailability } from "@/lib/api";
 import { todayInputValue } from "@/lib/format";
+import { freewayDateUrl } from "@/lib/provider-links";
+import Link from "next/link";
 import type { CourseChoice, CoverageStatus, HolesChoice, SearchInput, SortChoice, TeeTime } from "@/lib/types";
 
 const fieldClass =
@@ -37,6 +39,7 @@ export function SearchPage() {
   }, []);
 
   const selected = courses.find((course) => course.slug === courseSlug);
+  const freewayUrl = freewayDateUrl(date);
   const minDate = selected?.date_from ?? courses.map((course) => course.date_from).filter(Boolean).sort()[0];
   const maxDate = selected?.date_to ?? courses.map((course) => course.date_to).filter(Boolean).sort().at(-1);
 
@@ -134,6 +137,7 @@ export function SearchPage() {
           </select>
         </label>
         <p className="text-sm text-muted sm:col-span-2">Choose today through two weeks ahead. Times are local to each course. Final availability is confirmed on the course website.</p>
+        {selected?.release_note && <p className="text-sm text-muted sm:col-span-2">{selected.release_note}</p>}
         <button
           className="h-11 rounded-full bg-fairway text-sm font-medium text-fairway-ink sm:col-span-2"
           type="submit"
@@ -141,6 +145,14 @@ export function SearchPage() {
           Search
         </button>
       </form>
+
+      <section aria-labelledby="freeway-heading" className="rounded-2xl border border-line bg-card p-4">
+        <h2 id="freeway-heading" className="text-lg font-semibold">Freeway Golf Course</h2>
+        {process.env.NEXT_PUBLIC_FREEWAY_SNAPSHOT_ENABLED === "true" && <Link className="mt-2 inline-flex min-h-11 items-center underline" href="/freeway-snapshot">Explore captured Freeway times (snapshot demo)</Link>}
+        <p className="mt-1 text-sm text-muted">{courses.some(course => course.slug === "freeway") ? "Freeway is collected once daily. Search shows observations for 60 minutes after collection; check the provider for current times throughout the day." : "Freeway times are not included in the search results yet. View the selected date directly on its booking website."}</p>
+        <p className="mt-2 text-sm text-muted">Release timing is not yet verified. Choose players and holes on Freeway’s website; final pricing and fees are confirmed there.</p>
+        {freewayUrl ? <a className="mt-3 inline-flex min-h-11 items-center rounded-full bg-fairway px-5 text-sm font-medium text-fairway-ink" href={freewayUrl} target="_blank" rel="noopener noreferrer">View Freeway times for {date}</a> : <p className="mt-3 text-sm text-muted">Choose a valid date above to view Freeway times.</p>}
+      </section>
 
       <section aria-live="polite" className="flex flex-col gap-3">
         {status === "ready" ? (
@@ -150,10 +162,11 @@ export function SearchPage() {
         ) : null}
         {status === "ready" && coverage.some((course) => course.status !== "complete") ? (
           <ul className="text-sm text-muted">{coverage.filter((course) => course.status !== "complete").map((course) => (
-            <li key={course.slug}>{course.name}: {course.status === "outside_horizon" ? "outside booking horizon" : course.status === "unchecked" ? "not checked for this date" : "partially checked, stale or unavailable"}</li>
+            <li key={course.slug}>{course.name}: {course.availability_status === "stale" ? "observations are older than 60 minutes; check the provider for current times" : course.availability_status === "unavailable" ? "source unavailable or unverified for this date" : course.status === "outside_horizon" ? "outside booking horizon" : course.status === "unchecked" ? "not checked for this date" : "partially checked, stale or unavailable"}</li>
           ))}</ul>
         ) : null}
         {status === "loading" ? <p className="text-muted">Searching tee times…</p> : null}
+        {status === "ready" && coverage.filter(course => course.availability_status === "empty").map(course => <p key={course.slug}>{course.name}: no offers were available when this date was checked.</p>)}
         {status === "error" && message ? <p className="text-fairway">{message}</p> : null}
         {status === "ready" && teeTimes.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-line bg-card px-4 py-8 text-center text-muted">

@@ -13,8 +13,16 @@ def production_errors(catalog: CourseCatalog) -> list[str]:
         errors.append("production catalog must contain at least one course")
     for course in catalog.courses:
         prefix = f"{course.id}: "
-        if course.id.startswith("stub-") or course.platform != "miclub":
-            errors.append(prefix + "no verified production adapter (only miclub is currently implemented)")
+        agreed_freeway = (course.platform == 'quick18' and course.id == 'freeway'
+            and course.booking_url == 'https://freeway.quick18.com/teetimes/searchmatrix'
+            and course.params.get('collection_enabled') is True
+            and course.params.get('access_mode') == 'agreed_public_matrix_daily'
+            and course.params.get('access_reference') == 'docs/operations/FREEWAY_ACCESS.md'
+            and course.params.get('refresh_interval_minutes') == 1440
+            and course.params.get('provider_courses') == {'1598': 'Freeway', '1599': 'Back 9'}
+            and course.params.get('standard_rates') == {'9 Holes': {'holes': 9, 'id': '10537'}, '18 Holes': {'holes': 18, 'id': '10539'}})
+        if course.id.startswith("stub-") or (course.platform != "miclub" and not agreed_freeway):
+            errors.append(prefix + "no verified production adapter (only miclub is currently verified)")
         url = urlsplit(course.booking_url or "")
         if url.scheme != "https" or not url.hostname or url.hostname.endswith(".invalid"):
             errors.append(prefix + "a real HTTPS booking URL is required")

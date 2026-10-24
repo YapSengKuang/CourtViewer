@@ -1,0 +1,23 @@
+[
+  {
+    "date": "2026-10-24",
+    "captured_at": "2026-10-23T22:09:25.191000+00:00",
+    "offers_compared": 87,
+    "result": "all matched time, starting course, capacity, price and booking URL",
+    "source_sha256": "e9d46d1f4a827a4ede86d254408a7e4ed92946493286a324fc35abf8a86d15c2"
+  },
+  {
+    "date": "2026-10-25",
+    "captured_at": "2026-10-23T22:10:42.915000+00:00",
+    "offers_compared": 161,
+    "result": "all matched time, starting course, capacity, price and booking URL",
+    "source_sha256": "163fcbe0e8a7b08fab61d55960df6e7080ca97910be504274ea5aaf20e8aa7ad"
+  },
+  {
+    "date": "2026-10-26",
+    "captured_at": "2026-10-23T22:11:05.999000+00:00",
+    "offers_compared": 129,
+    "result": "all matched time, starting course, capacity, price and booking URL",
+    "source_sha256": "f2a0d3c6b9342961067a2de4d0797a25613821a868491fa893f81616092b1d5a"
+  }
+]

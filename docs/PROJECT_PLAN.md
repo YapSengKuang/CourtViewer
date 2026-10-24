@@ -1,5 +1,19 @@
 # Golf Booker — project plan
 
+## Current next-work plan — 24 October 2026
+
+**Delivery sequence:** [Freeway sprints F1–F3](FREEWAY_SPRINTS.md) now govern the next work: hosted labelled snapshot demo, accepted recurring availability, then operational validation and scaling measurements. Target weeks start 26 October, 2 November and 9 November; source access and engineering capacity govern the actual dates. The snapshot milestone does not complete the live-availability requirement.
+
+**New must-have:** integrate Freeway Golf Course with date-specific availability before other course expansion. The [Freeway integration and ten-plus-course scaling plan](FREEWAY_AND_SCALING.md) records the candidate implementation, unresolved source-access dependency and acceptance gates. The direct-date link is a fallback, not completion of aggregated availability. It supersedes the expansion ordering in the efficiency review below.
+
+The repository implements the Mandalay beta, partition reconciliation, bounded SQL search, course selection, pagination and scheduled collection. The foundation table and original estimates below are historical context, not an outstanding-task checklist. Hosted evidence is recorded through 17 October in [Sprint 3 status](SPRINT_3_STATUS.md); live health was not rechecked in this review.
+
+Follow the prioritised [efficiency review and next-work sequence](EFFICIENCY_REVIEW.md): establish a full database test/performance baseline, reduce collector database round trips, make Python installs reproducible, deduplicate/cancel browser requests, then measure query scaling and rehearse retention recovery. Complete the outstanding 72-hour soak, backup/restore, failure and quota checks before broader operational acceptance. Morack and Glen Waverley remain follow-up integrations. The original three-course measurement target below applies to expansion, not the approved Mandalay-only beta.
+
+Latest recorded local verification after the candidate Freeway work: 58 Python tests passed and 51 database-dependent tests skipped; eight frontend tests, lint and TypeScript passed. Production build and hosted acceptance remain outstanding. See the Freeway plan for release gates; these results do not establish current hosted reliability.
+
+## Original planning baseline
+
 Planning baseline: 16 October 2026. The initial Mandalay-only beta is deployed at https://golf-booker-beta.pages.dev with a Supabase Free database in Sydney. The owner approved launching Mandalay first and completing Morack/Glen Waverley afterward. Mandalay has passed a complete hosted collection; wider source acceptance and operational soak remain open. The foundation table below records the original planning baseline; current evidence is in [Sprint 3 status](SPRINT_3_STATUS.md).
 
 ## Product objective

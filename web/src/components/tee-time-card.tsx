@@ -12,6 +12,7 @@ export function TeeTimeCard({ teeTime }: TeeTimeCardProps) {
       <div className="min-w-0">
         <p className="text-2xl font-semibold tracking-tight">{formatTeeTime(teeTime.starts_at_local)}</p>
         <h2 className="mt-1 text-lg font-medium">{teeTime.course_name}</h2>
+        {teeTime.course_slug === "freeway" && <p className="text-sm font-medium">Starting course: {teeTime.source_slot_key.startsWith("1599:") ? "Back 9" : "Freeway"}</p>}
         <p className="text-sm text-muted">{location}</p>
         <p className="mt-2 text-sm text-muted">
           {teeTime.timezone} · {teeTime.holes} holes · {formatSpots(teeTime.spots_available)} ·{" "}

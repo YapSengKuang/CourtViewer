@@ -218,8 +218,12 @@ def test_beta_coverage_distinguishes_partial_from_fresh_empty(availability):
     session.flush()
     coverage = beta_search(session, day)['coverage'][0]
     assert coverage['status'] == 'incomplete' and coverage['checked'] == 1 and coverage['expected'] == 2
+    assert coverage['availability_status'] == 'unavailable'
     session.execute(text("UPDATE scrape_partitions SET status='empty' WHERE execution_id=:id"), {'id': execution_id})
     assert beta_search(session, day)['coverage'][0]['status'] == 'complete'
+    assert beta_search(session, day)['coverage'][0]['availability_status'] == 'empty'
+    session.execute(text("UPDATE scrape_executions SET started_at = CURRENT_TIMESTAMP - interval '61 minutes' WHERE id=:id"), {'id': execution_id})
+    assert beta_search(session, day)['coverage'][0]['availability_status'] == 'stale'
 
 
 def test_beta_rpc_defaults_do_not_grant_public_execution(db_session):

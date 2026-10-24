@@ -7,6 +7,9 @@ Booking is not handled here. Each result will deep-link to the course's own book
 ## Project planning
 
 - [Project plan and MVP scope](docs/PROJECT_PLAN.md)
+- [Current efficiency review and next-work sequence](docs/EFFICIENCY_REVIEW.md)
+- [Freeway integration status and scaling beyond ten courses](docs/FREEWAY_AND_SCALING.md)
+- [Freeway delivery sprints: hosted proof of concept to refreshed availability](docs/FREEWAY_SPRINTS.md)
 - [Design document](docs/DESIGN_DOCUMENT.md)
 - [Timeline and proposed sprints](docs/TIMELINE_AND_SPRINTS.md)
 - [Sprint 1 implementation status and remaining work](docs/SPRINT_1_STATUS.md)

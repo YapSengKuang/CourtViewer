@@ -1,5 +1,21 @@
 # Golf Booker — timeline and proposed sprints
 
+## Current delivery plan — Freeway
+
+Use the [Freeway sprint plan](FREEWAY_SPRINTS.md) for the current backlog, ownership, dependencies and acceptance criteria. These one-week sprints replace the original future calendar below; dates assume available engineering capacity and are provisional.
+
+| Sprint | Target dates | Deliverable |
+| --- | --- | --- |
+| F1 | 26–30 October 2026 | Labelled Freeway snapshot proof of concept on the hosted website |
+| F2 | 2–6 November 2026 | Refreshed Freeway availability in normal date search, conditional on accepted source access |
+| F3 | 9–13 November 2026 | Operational soak, recovery checks and measured ten-course scaling baseline |
+
+The snapshot demo is not refreshed availability. If the source dependency remains unresolved, retain clear snapshot labels and re-estimate F2's live release. Efficiency work is prioritised where it supports these milestones; Morack/Glen Waverley remain behind Freeway.
+
+## Historical calendar — superseded
+
+The calendar and sprint breakdown below preserve the original estimates. Much of Sprints 1–3 and beta hosting was implemented by 17 October; see [Sprint 3 status](SPRINT_3_STATUS.md) for recorded evidence.
+
 **Selected-stack update:** use option 4 (Cloudflare Pages static frontend, Supabase SQL API/Postgres, Python scraping in GitHub Actions). Sprint 1 includes the two-day free-tier feasibility task and billing-control verification described in the project plan. P11 delivers bounded SQL search RPCs instead of extending the production FastAPI service; P12 updates the frontend client; P14 configures Pages, Supabase and Actions with zero-spend controls. Validate quota exhaustion and service recovery in P16. Re-estimate after the feasibility task; dates below remain provisional.
 
 Proposed as of Friday 16 October 2026, Australia/Melbourne. Assumes one full-time engineer, weekly product-owner decisions and part-time QA/design review. Start Monday 19 October; four two-week sprints provide an eight-week MVP window. Dates are estimates, conditional on source access and the website list being confirmed in Sprint 1. Public holidays, leave and provider delays require re-estimation.
