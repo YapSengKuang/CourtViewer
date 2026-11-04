@@ -10,6 +10,7 @@ Booking is not handled here. Each result will deep-link to the course's own book
 
 ## Project planning
 
+- [Round planner and tee-time calendar UI](docs/ROUND_UI.md)
 - [Project plan and MVP scope](docs/PROJECT_PLAN.md)
 - [Current efficiency review and next-work sequence](docs/EFFICIENCY_REVIEW.md)
 - [Freeway integration status and scaling beyond ten courses](docs/FREEWAY_AND_SCALING.md)

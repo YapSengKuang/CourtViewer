@@ -77,3 +77,15 @@ export async function fetchHealth(): Promise<CourseHealth[]> {
   const body = (await response.json()) as { courses: CourseHealth[] };
   return body.courses;
 }
+
+export async function searchTimelineAvailability(input: SearchInput, isCurrent = () => true): Promise<SearchResult> {
+  const teeTimes: TeeTime[] = [];
+  for (let offset = 0; offset <= 10000; offset += 100) {
+    if (!isCurrent()) throw new Error("Search superseded");
+    const result = await searchAvailability({ ...input, offset });
+    if (!isCurrent()) throw new Error("Search superseded");
+    teeTimes.push(...result.tee_times);
+    if (!result.has_more) return { tee_times: teeTimes, coverage: result.coverage, has_more: false };
+  }
+  throw new Error("There are too many tee times for one view. Please try fewer courses.");
+}

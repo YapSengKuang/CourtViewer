@@ -82,9 +82,12 @@ Keep the collector running in a separate terminal for 15-minute updates:
 
 After collection completes, submit Search again in the frontend. The web helper
 does not start the collector automatically or scrape during user searches.
-The date picker follows dates present in the local report. For the initial
-5–7 November 2026 data, choose 6 November to try all courses; Growling Frog's
-5 November sheets were verified empty.
+The starting page offers dropdowns for today through day +14, 1–4 players and
+9/18/either holes. Submit it to open `/results`, with date choices above a
+calendar of time on the horizontal axis and courses on the vertical axis.
+Dates without collected data remain selectable and explicitly say “Not checked”.
+For the initial 5–7 November 2026 data, choose 6 November to try all courses;
+Growling Frog's 5 November sheets were verified empty.
 
 For a different report path, set `GOLF_LOCAL_REPORT` before starting the helper.
 For API-only use, run `.venv/bin/python -m uvicorn tee_api.local:app --host 127.0.0.1 --port 8001`
