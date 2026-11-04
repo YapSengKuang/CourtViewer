@@ -97,6 +97,15 @@ def parse_miclub_timesheet(
             continue  # A recognised sold-out row verifies coverage, not availability.
         price = _public_price(row, course)
         if price is None:
+            # Some public sheets contain rows offering only verified concession
+            # or twilight products. They provide no standard adult offer.
+            excluded = {label.lower() for label in course.params.get('excluded_fee_labels', [])}
+            labels = {
+                ' '.join(PRICE_RE.sub('', ' '.join(fee.css('::text').getall()).lower()).split())
+                for fee in row.css('.fees-wrapper li')
+            }
+            if labels and labels <= excluded:
+                continue
             raise ValueError("available row missing public adult price")
         if not (window_start <= starts_at < window_end) or starts_at < now:
             continue

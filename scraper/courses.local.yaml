@@ -1,0 +1,111 @@
+# Local research catalog only. Never pass this catalog to the production runner.
+# Disabled sources stay visible in the report and are never contacted.
+courses:
+  - id: club-mandalay
+    name: Club Mandalay
+    holes_options: [9, 18]
+    platform: miclub
+    timezone: Australia/Melbourne
+    booking_url: https://mandalay.miclub.com.au/guests/bookings/ViewPublicCalendar.msp?booking_resource_id=3000000
+    params:
+      collection_enabled: true
+      refresh_interval_minutes: 15
+      base_url: https://mandalay.miclub.com.au
+      booking_resource_id: '3000000'
+      fee_groups:
+        - {id: '5453317', holes: 18}
+        - {id: '5453680', holes: 9}
+
+  - id: morack
+    name: Morack Public Golf Course
+    holes_options: [9]
+    platform: miclub
+    timezone: Australia/Melbourne
+    booking_url: https://morack.miclub.com.au/guests/bookings/ViewPublicCalendar.msp
+    params:
+      collection_enabled: true
+      refresh_interval_minutes: 15
+      base_url: https://morack.miclub.com.au
+      booking_resource_id: '3000000'
+      fee_groups:
+        - id: '1115048'
+          holes: 9
+          public_fee_labels: [9 Holes Midweek, 9 Holes Weekend]
+          excluded_fee_labels: [Twilight Midweek, Twilight Weekend, 9 Hole Concession, 9 Holes Junior]
+
+  - id: yarra-bend
+    name: Yarra Bend Golf
+    holes_options: [9, 18]
+    platform: miclub
+    timezone: Australia/Melbourne
+    booking_url: https://yarrabend.miclub.com.au/guests/bookings/ViewPublicCalendar.msp?booking_resource_id=3000000
+    params:
+      collection_enabled: true
+      refresh_interval_minutes: 15
+      base_url: https://yarrabend.miclub.com.au
+      booking_resource_id: '3000000'
+      fee_groups:
+        - id: '991'
+          holes: 18
+          public_fee_labels: [Adult Off-Peak 18 Holes, Adult Peak 18 Holes]
+          excluded_fee_labels: [Senior Card Holder Off-Peak 18 Holes]
+        - id: '993'
+          holes: 9
+          public_fee_labels: [Adult Off Peak 9 Holes, Peak Early Bird (Back 9) Special, Adult Friday Afternoon 9 holes]
+          excluded_fee_labels: [Senior Card Holder 9 Holes]
+
+  - id: freeway
+    name: Freeway Golf Course
+    holes_options: [9, 18]
+    platform: quick18
+    timezone: Australia/Melbourne
+    booking_url: https://freeway.quick18.com/teetimes/searchmatrix
+    params:
+      collection_enabled: false
+      refresh_interval_minutes: 1440
+      local_status: daily_runner_required
+      blocked_reason: Use the existing database-guarded golf_scraper.daily_freeway runner with courses.freeway-live.yaml. Its daily agreement cannot be applied to this 15-minute collector.
+
+  - id: glen-waverley
+    name: Glen Waverley Golf Course
+    holes_options: [9, 18]
+    platform: golf_booking
+    timezone: Australia/Melbourne
+    booking_url: https://glenwaverleysportshub.com.au/golf-booking/
+    params:
+      collection_enabled: false
+      local_status: access_blocked
+      blocked_reason: Direct HTTP returned 403. The browser shows a JavaScript tee-time search; a verified accessible data transport is still required.
+
+  - id: malvern-valley
+    name: Malvern Valley Golf Course
+    holes_options: [9, 18]
+    platform: miclub
+    timezone: Australia/Melbourne
+    booking_url: https://malvernvalleygc.miclub.com.au/guests/bookings/ViewPublicCalendar.msp
+    params:
+      collection_enabled: false
+      local_status: captcha_required
+      blocked_reason: The public calendar enables CAPTCHA. Its offers are group packages for 2-4 players, requiring a separate price/capacity model and approved access method.
+
+  - id: albert-park
+    name: Albert Park Golf Course
+    holes_options: [9, 18]
+    platform: chronogolf
+    timezone: Australia/Melbourne
+    booking_url: https://www.chronogolf.com/club/albert-park-golf-course
+    params:
+      collection_enabled: false
+      local_status: transport_unverified
+      blocked_reason: Public club metadata is available, but the dynamic tee-time transport has not been verified. The provider disallows /private_api/; no availability endpoint is assumed.
+
+  - id: ivanhoe
+    name: Ivanhoe Public Golf Course
+    holes_options: [18]
+    platform: activecarrot
+    timezone: Australia/Melbourne
+    booking_url: https://secure.activecarrot.com/login?site=16
+    params:
+      collection_enabled: false
+      local_status: login_required
+      blocked_reason: The official online round-booking link opens an ActiveCarrot login. An approved availability feed is needed; online booking covers adult 18-hole rounds only.
