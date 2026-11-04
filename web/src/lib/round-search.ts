@@ -30,11 +30,20 @@ export function slotMinutes(slot: TeeTime): number {
 export const PIXELS_PER_MINUTE = 3;
 export const SLOT_WIDTH = 82;
 
-export function timelineBounds(slots: TeeTime[]): { start: number; end: number } {
+export function currentTimelineStart(date: string, now: Date, timezone: string): number | undefined {
+  const parts = new Intl.DateTimeFormat("en-AU", { timeZone: timezone, year: "numeric", month: "2-digit",
+    day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);
+  const part = (type: string) => parts.find(p => p.type === type)!.value;
+  const today = `${part("year")}-${part("month")}-${part("day")}`;
+  return date === today ? Number(part("hour")) * 60 + Number(part("minute")) : undefined;
+}
+
+export function timelineBounds(slots: TeeTime[], startAt?: number): { start: number; end: number } {
   const minutes = slots.map(slotMinutes).filter(Number.isFinite);
+  const start = startAt ?? Math.floor(Math.min(6 * 60, ...minutes) / 60) * 60;
   return {
-    start: Math.floor(Math.min(6 * 60, ...minutes) / 60) * 60,
-    end: Math.min(24 * 60, Math.ceil(Math.max(20 * 60, ...minutes.map(m => m + 35)) / 60) * 60),
+    start,
+    end: Math.min(24 * 60, Math.ceil(Math.max(start + 1, 20 * 60, ...minutes.map(m => m + 35)) / 60) * 60),
   };
 }
 
@@ -52,6 +61,7 @@ export function layoutSlots(slots: TeeTime[], start: number) {
 }
 
 export function hourLabel(minutes: number): string {
-  const hour = (minutes / 60) % 24;
-  return `${hour % 12 || 12}${hour < 12 ? "am" : "pm"}`;
+  const hour = Math.floor(minutes / 60) % 24;
+  const minute = minutes % 60;
+  return `${hour % 12 || 12}${minute ? `:${String(minute).padStart(2, "0")}` : ""}${hour < 12 ? "am" : "pm"}`;
 }

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { fetchCourses, searchTimelineAvailability } from "@/lib/api";
 import { formatPrice, formatTeeTime, formatUpdated } from "@/lib/format";
-import { hourLabel, layoutSlots, PIXELS_PER_MINUTE, resultsUrl, roundDates, SLOT_WIDTH, timelineBounds, type RoundDate } from "@/lib/round-search";
+import { currentTimelineStart, hourLabel, layoutSlots, PIXELS_PER_MINUTE, resultsUrl, roundDates, SLOT_WIDTH, timelineBounds, type RoundDate } from "@/lib/round-search";
 import type { CourseChoice, CoverageStatus, HolesChoice, SearchResult, TeeTime } from "@/lib/types";
 
 function coverageLabel(coverage: CoverageStatus | undefined, count: number, players: number) {
@@ -75,10 +75,14 @@ export function RoundResults() {
     setSelected(null);
     slotButtonRef.current?.focus();
   }
-  const slots = status === "ready" && data ? data.result.tee_times : [];
-  const bounds = timelineBounds(slots);
+  const startAt = clock === null ? undefined : currentTimelineStart(date, new Date(clock), data?.courses[0]?.timezone ?? "Australia/Melbourne");
+  const slots = status === "ready" && data ? data.result.tee_times.filter(slot =>
+    startAt === undefined || Date.parse(slot.starts_at) >= clock!) : [];
+  const bounds = timelineBounds(slots, startAt);
   const width = (bounds.end - bounds.start) * PIXELS_PER_MINUTE + SLOT_WIDTH;
-  const hours = Array.from({ length: (bounds.end - bounds.start) / 60 + 1 }, (_, i) => bounds.start + i * 60);
+  const hours = [bounds.start, ...Array.from({ length: Math.floor(bounds.end / 60) - Math.floor(bounds.start / 60) },
+    (_, i) => (Math.floor(bounds.start / 60) + i + 1) * 60)]
+    .filter(hour => hour === bounds.start || hour - bounds.start >= 25);
   const selectedDay = days.find(day => day.value === date);
   const complete = data?.result.coverage.filter(c => c.status === "complete").length ?? 0;
 

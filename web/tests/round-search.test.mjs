@@ -7,7 +7,7 @@ const source = await readFile(new URL('../src/lib/round-search.ts', import.meta.
 const js = ts.transpileModule(source, {
   compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
 }).outputText;
-const { roundDates, resultsUrl, layoutSlots, timelineBounds, slotMinutes, SLOT_WIDTH } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
+const { roundDates, resultsUrl, layoutSlots, timelineBounds, currentTimelineStart, hourLabel, slotMinutes, SLOT_WIDTH } = await import(`data:text/javascript;base64,${Buffer.from(js).toString('base64')}`);
 
 test('date choices include today through day +14 across daylight saving and year boundaries', () => {
   const previous = process.env.TZ;
@@ -57,4 +57,24 @@ test('timeline includes early and late rounds, uses course-local clocks and hand
 
 test('results navigation keeps the selected date, party size and holes in the URL', () => {
   assert.equal(resultsUrl('2026-11-06', 4, '9'), '/results?date=2026-11-06&players=4&holes=9');
+});
+
+test('only today starts at the current course-local minute, including UTC date boundaries', () => {
+  const now = new Date('2026-11-05T21:37:20Z'); // 8:37am on 6 November in Melbourne.
+  const today = currentTimelineStart('2026-11-06', now, 'Australia/Melbourne');
+  assert.equal(today, 517);
+  assert.deepEqual(timelineBounds([], today), { start: 517, end: 1200 });
+  const tomorrow = currentTimelineStart('2026-11-07', now, 'Australia/Melbourne');
+  assert.equal(tomorrow, undefined);
+  assert.deepEqual(timelineBounds([], tomorrow), { start: 360, end: 1200 });
+  assert.equal(currentTimelineStart('2026-11-05', now, 'Australia/Melbourne'), undefined);
+  assert.equal(hourLabel(today), '8:37am');
+  assert.equal(hourLabel(480), '8am');
+});
+
+test('today retains a positive timeline after normal closing hours and just before midnight', () => {
+  assert.deepEqual(timelineBounds([], 21 * 60 + 15), { start: 1275, end: 1320 });
+  assert.deepEqual(timelineBounds([], 1439), { start: 1439, end: 1440 });
+  assert.equal(hourLabel(1439), '11:59pm');
+  assert.equal(hourLabel(1440), '12am');
 });
