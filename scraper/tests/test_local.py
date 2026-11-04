@@ -271,3 +271,84 @@ def test_transport_rejects_cross_origin_redirects_and_expired_budget():
 def test_invalid_horizon_is_rejected_before_network(catalog, days):
     with pytest.raises(ValueError):
         collect(catalog, blank(), now=NOW, days=days)
+
+
+def parallel_catalog(catalog):
+    course = next(c for c in catalog.courses if c.id == 'morack')
+    return CourseCatalog(courses=[course.model_copy(update={
+        'id': f'morack-{index}',
+        'booking_url': f'https://{host}/guests/bookings/ViewPublicCalendar.msp',
+        'params': {**course.params, 'base_url': f'https://{host}'},
+    }) for index, host in enumerate(['one.example', 'two.example', 'three.example', 'one.example'])])
+
+
+def test_parallel_hosts_match_serial_results_and_preserve_previous_report(catalog):
+    selected = parallel_catalog(catalog)
+    html = (FIXTURES / 'morack_sheet.html').read_text()
+    def fetch(url):
+        return calendar(selected.courses[0]) if 'ViewPublicCalendar' in url else html
+    previous = blank()
+    serial = collect(selected, previous, now=NOW, first_date=date(2026, 11, 5), days=1,
+                     fetch=fetch, workers=1)
+    parallel = collect(selected, previous, now=NOW, first_date=date(2026, 11, 5), days=1,
+                       fetch=fetch, workers=3)
+    assert serial == parallel
+    assert all(c['status'] == 'complete' for c in parallel['courses'].values())
+    assert previous == blank()
+
+
+def test_parallel_collection_is_bounded_and_same_host_never_overlaps(catalog):
+    from threading import Barrier, Lock
+    from urllib.parse import urlsplit
+    selected = parallel_catalog(catalog)
+    html = (FIXTURES / 'morack_sheet.html').read_text()
+    gate, lock = Barrier(3), Lock()
+    active, seen = set(), set()
+    peak = 0
+    def fetch(url):
+        nonlocal peak
+        host = urlsplit(url).hostname
+        with lock:
+            assert host not in active
+            active.add(host)
+            peak = max(peak, len(active))
+            first = host not in seen
+            seen.add(host)
+        try:
+            if first:
+                gate.wait(timeout=5)
+            return calendar(selected.courses[0]) if 'ViewPublicCalendar' in url else html
+        finally:
+            with lock:
+                active.remove(host)
+    report = collect(selected, blank(), now=NOW, first_date=date(2026, 11, 5),
+                     days=1, fetch=fetch, workers=3)
+    assert peak == 3
+    assert all(c['status'] == 'complete' for c in report['courses'].values())
+
+
+@pytest.mark.parametrize('workers', [0, 4])
+def test_invalid_worker_count_is_rejected_before_network(catalog, workers):
+    with pytest.raises(ValueError, match='1-3 workers'):
+        collect(catalog, blank(), now=NOW, days=1, workers=workers,
+                fetch=lambda url: pytest.fail('invalid worker count contacted source'))
+
+
+def test_origin_clients_share_cycle_deadline_and_reuse_robots_state(catalog, monkeypatch):
+    import golf_scraper.local as local
+    selected = parallel_catalog(catalog)
+    html = (FIXTURES / 'morack_sheet.html').read_text()
+    clients = []
+    class FakeHttp:
+        def __init__(self, *, deadline):
+            self.deadline = deadline
+            self.calls = []
+            clients.append(self)
+        def __call__(self, url):
+            self.calls.append(url)
+            return calendar(selected.courses[0]) if 'ViewPublicCalendar' in url else html
+    monkeypatch.setattr(local, 'PublicHttp', FakeHttp)
+    collect(selected, blank(), now=NOW, first_date=date(2026, 11, 5), days=1)
+    assert len(clients) == 3  # Four courses, three origins; one reusable client each.
+    assert len({client.deadline for client in clients}) == 1
+    assert sorted(len(client.calls) for client in clients) == [2, 2, 4]

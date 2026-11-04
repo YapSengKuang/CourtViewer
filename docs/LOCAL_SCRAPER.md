@@ -16,6 +16,12 @@ From the repository root, using the existing virtual environment:
 .venv/bin/python -m golf_scraper.local --days 3 --watch
 ```
 
+Collection defaults to three parallel hosts. Requests to the same origin remain
+serial, share robots policy and pacing state, and keep at least a one-second
+delay. Use `--workers 1` for fully serial operation; the allowed range is 1–3.
+The worker pool shares one nine-minute request budget for the cycle, including
+time spent waiting for a worker. It never overlaps scheduled cycles.
+
 The first command is offline. The second collects once and exits. The third
 keeps collecting every 15 minutes until Ctrl+C. Keep the process and computer
 running; sleeping the computer pauses collection. This is an interval from the
@@ -160,7 +166,8 @@ player, not guaranteed checkout totals. Booking remains on the course website.
 Growling Frog's fee popover is parsed as inert HTML without executing scripts;
 missing popovers, unknown adult labels or conflicting adult prices fail closed.
 
-Requests are serial, at least one second apart per origin, with robots checks,
+Requests are serial within each origin, with up to three origins collected in
+parallel. Requests stay at least one second apart per origin, with robots checks,
 20-second request timeouts, no retries, bounded response size, same-origin HTTPS
 redirects only, and a nine-minute request budget per cycle. Source crawl delays
 and request-rate policies can further slow requests. A local file lock prevents
@@ -184,6 +191,22 @@ Live JSON output is intentionally not committed. The tests cover date mismatch,
 known versus unknown rate exclusions, source isolation, saved freshness after
 failure, disabled sources making no requests, cooldown, overlapping writers,
 robots failures, redirect boundaries and restart scheduling.
+
+Efficiency review on 5 November 2026: a three-day cycle across the seven enabled
+courses needs 53 requests (7 robots files, 7 calendars and 39 date/fee-group
+sheets). Parallel hosts reduce elapsed waiting without increasing that count.
+The parser now reads each row's fee labels once and prepares fee-label sets once
+per sheet. Report isolation uses one deep copy instead of encoding and decoding
+the entire report as JSON.
+
+An offline seven-host benchmark using 28 fixture responses with 40 ms simulated
+network waits averaged 1.28 seconds with one worker and 0.56 seconds with three
+workers over three runs (2.30× faster). This is a simulation, not a live-site
+speed guarantee. Regression tests verify equal serial/parallel results,
+three-worker bounds, no same-origin overlap, shared cycle deadlines and reuse
+of origin clients. Existing rate limits, cooldowns, failure preservation and
+atomic output remain in place. The production Scrapy runner is unchanged apart
+from the shared parser's fee-label optimization.
 
 Local acceptance on 5 November 2026: a live three-day run (5–7 November)
 completed all 15 requested partitions across Mandalay, Morack and Yarra Bend,

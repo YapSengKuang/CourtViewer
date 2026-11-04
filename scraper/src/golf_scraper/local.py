@@ -7,6 +7,8 @@ from __future__ import annotations
 
 import argparse
 from contextlib import contextmanager
+from concurrent.futures import ThreadPoolExecutor
+from copy import deepcopy
 from datetime import date, datetime, timedelta, timezone
 import fcntl
 import json
@@ -44,12 +46,12 @@ class SameOriginRedirect(HTTPRedirectHandler):
 
 
 class PublicHttp:
-    """Serial, bounded public requests with per-origin delay and robots checks."""
-    def __init__(self):
+    """One worker's bounded requests with per-origin delay and robots checks."""
+    def __init__(self, *, deadline: float | None = None):
         self.opener = build_opener(SameOriginRedirect())
         self.policies: dict[str, RobotFileParser] = {}
         self.last_request: dict[str, float] = {}
-        self.deadline = time.monotonic() + 540
+        self.deadline = deadline if deadline is not None else time.monotonic() + 540
 
     def _read(self, url: str, delay: float = 1) -> str:
         parsed = urlsplit(url)
@@ -170,84 +172,109 @@ def error_label(exc: Exception) -> str:
 
 
 def collect(catalog: CourseCatalog, previous: dict, *, now: datetime, days: int,
-            first_date: date | None = None, fetch=None) -> dict:
+            first_date: date | None = None, fetch=None, workers: int = 3) -> dict:
     if now.tzinfo is None or not 1 <= days <= 15:
         raise ValueError('collection requires an aware clock and 1-15 days')
-    fetch = fetch or PublicHttp()
-    # JSON round-trip isolates this attempt from callers' previously saved results.
-    report = json.loads(json.dumps(previous))
+    if not 1 <= workers <= 3:
+        raise ValueError('collection requires 1-3 workers')
+    # Copy once; workers own disjoint course entries and never mutate caller data.
+    report = deepcopy(previous)
     report.update(schema_version=1, generated_at=now.isoformat(), interval_minutes=15)
+    origins: dict[tuple[str | None, int], list[CourseSpec]] = {}
     for course in catalog.courses:
-        old = report['courses'].get(course.id, {})
-        entry = {**old, 'name': course.name, 'timezone': course.timezone,
-                 'booking_url': course.booking_url}
-        report['courses'][course.id] = entry
-        if course.params.get('collection_enabled') is not True:
-            # A blocked source has unknown availability, never a verified empty list.
-            entry.update(status=course.params.get('local_status', 'disabled'),
-                         error=course.params.get('blocked_reason', 'collection disabled'))
-            entry.pop('next_scheduled_at', None)
-            continue
-        interval = int(course.params.get('refresh_interval_minutes', 15))
-        if interval < 15:
-            raise ValueError('local sources must use a cadence of at least 15 minutes')
-        last = old.get('last_attempt_at')
-        next_due = datetime.fromisoformat(last) + timedelta(minutes=interval) if last else now
-        if now < next_due:
-            entry['next_scheduled_at'] = next_due.isoformat()
-            continue
-        first = first_date or now.astimezone(ZoneInfo(course.timezone)).date()
-        today = now.astimezone(ZoneInfo(course.timezone)).date()
-        if first < today or first + timedelta(days=days) > today + timedelta(days=15):
-            raise ValueError('requested dates must be within today through day +14')
-        entry.update(last_attempt_at=now.isoformat(), next_scheduled_at=(now + timedelta(minutes=interval)).isoformat())
-        partitions = {key: value for key, value in old.get('partitions', {}).items()
-                      if today.isoformat() <= key.split(':')[0] <= (today + timedelta(days=14)).isoformat()}
-        entry['partitions'] = partitions
-        attempted = []
-        try:
-            groups = validate_course(course)
-            validate_calendar(fetch(course.booking_url), course, groups)
-        except (ValueError, OSError, UnicodeError) as exc:
-            entry.update(status='failed', error=error_label(exc))
-            continue
-        for offset in range(days):
-            day = first + timedelta(days=offset)
-            for group in groups:
-                key = f"{day}:{group['id']}"
-                attempted.append(key)
-                partition = {**partitions.get(key, {}), 'last_attempt_at': now.isoformat()}
-                partitions[key] = partition
-                try:
-                    url = timesheet_url(course, day, str(group['id']))
-                    html = fetch(url)
-                    if sheet_date(html) != day:
-                        raise SourceUnavailable('tee sheet date does not match requested date')
-                    params = {**course.params}
-                    for field in ('public_fee_labels', 'excluded_fee_labels', 'fee_layout'):
-                        if field in group:
-                            params[field] = group[field]
-                    scoped = course.model_copy(update={'params': params})
-                    items = parse_miclub_timesheet(html, scoped, holes=group['holes'], booking_url=url, now=now)
-                    rows = []
-                    for item in items:
-                        issue = rejection_reason(item, now=now)
-                        if issue or item['spots_available'] > 4:
-                            raise SourceUnavailable(issue or 'capacity exceeds one bookable group')
-                        rows.append({**dict(item), 'starts_at': item['starts_at'].isoformat(),
-                                     'source_partition': key, 'observed_at': now.isoformat()})
-                    partition.update(status='complete' if rows else 'empty', error=None,
-                                     last_success_at=now.isoformat(), tee_times=rows)
-                except (ValueError, OSError, UnicodeError) as exc:
-                    # Keep the previous observations and timestamps, marked as failed.
-                    partition.update(status='failed', error=error_label(exc))
-        good = sum(partitions[key]['status'] in ('complete', 'empty') for key in attempted)
-        entry.update(status='complete' if good == len(attempted) else 'partial' if good else 'failed',
-                     error=None if good == len(attempted) else f'{len(attempted) - good} requested partitions failed; see partition errors')
-        entry['requested_partitions'] = attempted
-        if good == len(attempted):
-            entry['last_success_at'] = now.isoformat()
+        parsed = urlsplit(course.booking_url or '')
+        origin = (parsed.hostname, parsed.port or 443)
+        origins.setdefault(origin, []).append(course)
+    deadline = time.monotonic() + 540
+
+    def collect_origin(courses):
+        # One client per origin, reused across courses on that host. No two workers
+        # can contact the same host; robots policy and request pacing stay shared.
+        client = fetch if fetch is not None else PublicHttp(deadline=deadline)
+        return {course.id: _collect_course(course, report['courses'].get(course.id, {}),
+                    now=now, days=days, first_date=first_date, fetch=client)
+                for course in courses}
+
+    if workers == 1 or len(origins) <= 1:
+        collected = [collect_origin(courses) for courses in origins.values()]
+    else:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            collected = list(pool.map(collect_origin, origins.values()))
+    for entries in collected:
+        report['courses'].update(entries)
     return report
+
+
+def _collect_course(course: CourseSpec, old: dict, *, now: datetime, days: int,
+                    first_date: date | None, fetch) -> dict:
+    entry = {**old, 'name': course.name, 'timezone': course.timezone,
+             'booking_url': course.booking_url}
+    if course.params.get('collection_enabled') is not True:
+        # A blocked source has unknown availability, never a verified empty list.
+        entry.update(status=course.params.get('local_status', 'disabled'),
+                     error=course.params.get('blocked_reason', 'collection disabled'))
+        entry.pop('next_scheduled_at', None)
+        return entry
+    interval = int(course.params.get('refresh_interval_minutes', 15))
+    if interval < 15:
+        raise ValueError('local sources must use a cadence of at least 15 minutes')
+    last = old.get('last_attempt_at')
+    next_due = datetime.fromisoformat(last) + timedelta(minutes=interval) if last else now
+    if now < next_due:
+        entry['next_scheduled_at'] = next_due.isoformat()
+        return entry
+    first = first_date or now.astimezone(ZoneInfo(course.timezone)).date()
+    today = now.astimezone(ZoneInfo(course.timezone)).date()
+    if first < today or first + timedelta(days=days) > today + timedelta(days=15):
+        raise ValueError('requested dates must be within today through day +14')
+    entry.update(last_attempt_at=now.isoformat(), next_scheduled_at=(now + timedelta(minutes=interval)).isoformat())
+    partitions = {key: value for key, value in old.get('partitions', {}).items()
+                  if today.isoformat() <= key.split(':')[0] <= (today + timedelta(days=14)).isoformat()}
+    entry['partitions'] = partitions
+    attempted = []
+    try:
+        groups = validate_course(course)
+        validate_calendar(fetch(course.booking_url), course, groups)
+    except (ValueError, OSError, UnicodeError) as exc:
+        entry.update(status='failed', error=error_label(exc))
+        return entry
+    for offset in range(days):
+        day = first + timedelta(days=offset)
+        for group in groups:
+            key = f"{day}:{group['id']}"
+            attempted.append(key)
+            partition = {**partitions.get(key, {}), 'last_attempt_at': now.isoformat()}
+            partitions[key] = partition
+            try:
+                url = timesheet_url(course, day, str(group['id']))
+                html = fetch(url)
+                if sheet_date(html) != day:
+                    raise SourceUnavailable('tee sheet date does not match requested date')
+                params = {**course.params}
+                for field in ('public_fee_labels', 'excluded_fee_labels', 'fee_layout'):
+                    if field in group:
+                        params[field] = group[field]
+                scoped = course.model_copy(update={'params': params})
+                items = parse_miclub_timesheet(html, scoped, holes=group['holes'], booking_url=url, now=now)
+                rows = []
+                for item in items:
+                    issue = rejection_reason(item, now=now)
+                    if issue or item['spots_available'] > 4:
+                        raise SourceUnavailable(issue or 'capacity exceeds one bookable group')
+                    rows.append({**dict(item), 'starts_at': item['starts_at'].isoformat(),
+                                 'source_partition': key, 'observed_at': now.isoformat()})
+                partition.update(status='complete' if rows else 'empty', error=None,
+                                 last_success_at=now.isoformat(), tee_times=rows)
+            except (ValueError, OSError, UnicodeError) as exc:
+                # Keep the previous observations and timestamps, marked as failed.
+                partition.update(status='failed', error=error_label(exc))
+    good = sum(partitions[key]['status'] in ('complete', 'empty') for key in attempted)
+    entry.update(status='complete' if good == len(attempted) else 'partial' if good else 'failed',
+                 error=None if good == len(attempted) else f'{len(attempted) - good} requested partitions failed; see partition errors')
+    entry['requested_partitions'] = attempted
+    if good == len(attempted):
+        entry['last_success_at'] = now.isoformat()
+    return entry
 
 
 def summary(report: dict) -> None:
@@ -271,6 +298,8 @@ def main() -> None:
     parser.add_argument('--course', action='append', help='course slug; repeat to select multiple')
     parser.add_argument('--days', type=int, default=3, choices=range(1, 16), metavar='1..15')
     parser.add_argument('--date', type=date.fromisoformat, help='first local date; default is today')
+    parser.add_argument('--workers', type=int, default=3, choices=range(1, 4),
+                        help='parallel hosts, 1-3 (default: 3); each host remains serial')
     parser.add_argument('--watch', action='store_true', help='repeat every 15 minutes until Ctrl+C')
     parser.add_argument('--list', action='store_true', help='list course access status without network requests')
     args = parser.parse_args()
@@ -290,7 +319,7 @@ def main() -> None:
         with output_lock(args.output):
             while True:
                 now = datetime.now(timezone.utc)
-                report = collect(catalog, read_report(args.output), now=now, days=args.days, first_date=args.date)
+                report = collect(catalog, read_report(args.output), now=now, days=args.days, first_date=args.date, workers=args.workers)
                 save_report(args.output, report)
                 summary(report)
                 if not args.watch:

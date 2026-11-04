@@ -82,6 +82,8 @@ def parse_miclub_timesheet(
         if not (explicit_empty or provider_empty):
             raise ValueError("timesheet has no recognised rows or verified empty marker")
     groups = {}
+    configured = {label.lower() for label in course.params.get('public_fee_labels', [])}
+    excluded = {label.lower() for label in course.params.get('excluded_fee_labels', [])}
     for row in rows:
         starts_at = _starts_at(row, day, zone)
         row_id = row.attrib.get("data-value")
@@ -95,14 +97,14 @@ def parse_miclub_timesheet(
         spots = len(row.css("div.cell-available"))
         if spots == 0:
             continue  # A recognised sold-out row verifies coverage, not availability.
-        price = _public_price(row, course)
+        fee_labels = _row_fee_labels(row, course)
+        price = _public_price(fee_labels, configured)
         if price is None:
             # Some public sheets contain rows offering only verified concession
             # or twilight products. They provide no standard adult offer.
-            excluded = {label.lower() for label in course.params.get('excluded_fee_labels', [])}
             labels = {
                 ' '.join(PRICE_RE.sub('', label.lower()).split())
-                for label in _row_fee_labels(row, course)
+                for label in fee_labels
             }
             if labels and labels <= excluded:
                 continue
@@ -250,16 +252,15 @@ def _row_fee_labels(row: Selector, course: CourseSpec) -> list[str]:
     return [' '.join(fee.xpath('string(.)').get('').split()) for fee in fees]
 
 
-def _public_price(row: Selector, course: CourseSpec) -> str | None:
+def _public_price(labels: list[str], configured: set[str]) -> str | None:
     prices = set()
-    for label in _row_fee_labels(row, course):
+    for label in labels:
         lowered = label.lower()
-        configured = course.params.get("public_fee_labels", [])
         fee_label = " ".join(PRICE_RE.sub("", lowered).split())
         if "junior" in lowered or "concession" in lowered:
             continue
         if configured:
-            if fee_label not in [label.lower() for label in configured]:
+            if fee_label not in configured:
                 continue
         elif "public" not in lowered:
             continue
