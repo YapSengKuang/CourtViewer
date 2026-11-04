@@ -224,7 +224,7 @@ def collect(catalog: CourseCatalog, previous: dict, *, now: datetime, days: int,
                     if sheet_date(html) != day:
                         raise SourceUnavailable('tee sheet date does not match requested date')
                     params = {**course.params}
-                    for field in ('public_fee_labels', 'excluded_fee_labels'):
+                    for field in ('public_fee_labels', 'excluded_fee_labels', 'fee_layout'):
                         if field in group:
                             params[field] = group[field]
                     scoped = course.model_copy(update={'params': params})

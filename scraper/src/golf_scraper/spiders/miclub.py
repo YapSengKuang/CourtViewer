@@ -101,8 +101,8 @@ def parse_miclub_timesheet(
             # or twilight products. They provide no standard adult offer.
             excluded = {label.lower() for label in course.params.get('excluded_fee_labels', [])}
             labels = {
-                ' '.join(PRICE_RE.sub('', ' '.join(fee.css('::text').getall()).lower()).split())
-                for fee in row.css('.fees-wrapper li')
+                ' '.join(PRICE_RE.sub('', label.lower()).split())
+                for label in _row_fee_labels(row, course)
             }
             if labels and labels <= excluded:
                 continue
@@ -232,9 +232,27 @@ def _starts_at(row: Selector, day: date, zone: ZoneInfo) -> datetime | None:
     return local.astimezone(timezone.utc)
 
 
+def _row_fee_labels(row: Selector, course: CourseSpec) -> list[str]:
+    if course.params.get('fee_layout') == 'popover':
+        # Growling Frog embeds its public fee list as inert HTML in a popover
+        # attribute. Parse only this configured layout; never execute its HTML.
+        popovers = row.css('.fees-wrapper .fee-applied')
+        if len(popovers) != 1 or popovers[0].attrib.get('data-html') != 'true':
+            raise ValueError('missing or ambiguous fee popover')
+        content = popovers[0].attrib.get('data-content', '')
+        if not content or len(content) > 10000:
+            raise ValueError('missing or oversized fee popover')
+        fees = Selector(text=content).css('ul > li')
+        if not fees:
+            raise ValueError('unrecognised fee popover layout')
+    else:
+        fees = row.css('.fees-wrapper li')
+    return [' '.join(fee.xpath('string(.)').get('').split()) for fee in fees]
+
+
 def _public_price(row: Selector, course: CourseSpec) -> str | None:
-    for item in row.css(".fees-wrapper li"):
-        label = " ".join(part.strip() for part in item.css("::text").getall())
+    prices = set()
+    for label in _row_fee_labels(row, course):
         lowered = label.lower()
         configured = course.params.get("public_fee_labels", [])
         fee_label = " ".join(PRICE_RE.sub("", lowered).split())
@@ -247,5 +265,7 @@ def _public_price(row: Selector, course: CourseSpec) -> str | None:
             continue
         price = PRICE_RE.search(label)
         if price is not None:
-            return price.group(1)
-    return None
+            prices.add(price.group(1))
+    if len(prices) > 1:
+        raise ValueError('conflicting public adult prices in one booking row')
+    return next(iter(prices), None)

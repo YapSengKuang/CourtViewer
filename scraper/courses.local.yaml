@@ -54,6 +54,91 @@ courses:
           public_fee_labels: [Adult Off Peak 9 Holes, Peak Early Bird (Back 9) Special, Adult Friday Afternoon 9 holes]
           excluded_fee_labels: [Senior Card Holder 9 Holes]
 
+  - id: northcote
+    name: Northcote Public Golf Course
+    holes_options: [9, 18]
+    platform: miclub
+    timezone: Australia/Melbourne
+    booking_url: https://northcotegc.miclub.com.au/guests/bookings/ViewPublicCalendar.msp
+    params:
+      collection_enabled: true
+      refresh_interval_minutes: 15
+      base_url: https://northcotegc.miclub.com.au
+      booking_resource_id: '3000000'
+      fee_groups:
+        - id: '102687'
+          holes: 18
+          public_fee_labels: [Adult 18 Holes]
+          excluded_fee_labels: [Senior / Concession 18 Hole, Junior (under 16) 18 Holes]
+        - id: '102688'
+          holes: 9
+          public_fee_labels: [Adult 9 Holes, Adult Weekend 9 Holes]
+          excluded_fee_labels: [Twilight, Senior / Concession 9-Holes, Junior (under 16) 9-Holes]
+
+  - id: bundoora-park
+    name: Bundoora Park Golf Course
+    holes_options: [9, 18]
+    platform: miclub
+    timezone: Australia/Melbourne
+    booking_url: https://bundoorapark.miclub.com.au/guests/bookings/ViewPublicCalendar.msp
+    params:
+      collection_enabled: true
+      refresh_interval_minutes: 15
+      base_url: https://bundoorapark.miclub.com.au
+      booking_resource_id: '3000000'
+      fee_groups:
+        - id: '102136'
+          holes: 18
+          public_fee_labels: [Adult (Mid-Week), Adult (Weekend)]
+          excluded_fee_labels: [Senior / Concession]
+        - id: '102137'
+          holes: 9
+          public_fee_labels: [Adult Weekday, Adult (Weekend)]
+          excluded_fee_labels: [Twilight, Seniors / Concession]
+
+  - id: growling-frog
+    name: Growling Frog Golf Course
+    holes_options: [9, 18]
+    platform: miclub
+    timezone: Australia/Melbourne
+    booking_url: https://growlingfroggc.miclub.com.au/guests/bookings/ViewPublicCalendar.msp
+    params:
+      collection_enabled: true
+      refresh_interval_minutes: 15
+      base_url: https://growlingfroggc.miclub.com.au
+      booking_resource_id: '3000000'
+      fee_groups:
+        - id: '101495'
+          holes: 18
+          fee_layout: popover
+          public_fee_labels: [Adult - Online]
+          excluded_fee_labels: [Seniors, Under 21, Group Rate, Partner Rate, GSM Golf EZi / Lifestyle, Industry]
+        - id: '101533'
+          holes: 9
+          public_fee_labels: [Adult]
+          excluded_fee_labels: [Seniors, Under 21]
+
+  - id: melton-valley
+    name: Melton Valley Golf Club
+    holes_options: [9, 18]
+    platform: miclub
+    timezone: Australia/Melbourne
+    booking_url: https://meltonvalley.miclub.com.au/guests/bookings/ViewPublicCalendar.msp
+    params:
+      collection_enabled: true
+      refresh_interval_minutes: 15
+      base_url: https://meltonvalley.miclub.com.au
+      booking_resource_id: '3000000'
+      fee_groups:
+        - id: '102876'
+          holes: 18
+          public_fee_labels: [Adult - Midweek, Adult - Weekend]
+          excluded_fee_labels: [Concession - Weekday, Junior (Under 18 Years) Mon-Fri, Junior ( Under 18 Years) Sat-Sun]
+        - id: '102877'
+          holes: 9
+          public_fee_labels: [Adult - Weekday, Adult - Weekend]
+          excluded_fee_labels: [Concession - Weekday, Junior (Under 18 Years)Weekday, Juniors ( Under 18 Years) Weekend]
+
   - id: freeway
     name: Freeway Golf Course
     holes_options: [9, 18]

@@ -17,3 +17,25 @@ for the Friday fixture) and, where present, one row
 offering only configured excluded fees. Cell contents are removed completely;
 only the original available/taken states remain. These small fragments are
 offline regression inputs, not full-sheet coverage or current availability.
+
+## Four alternative courses
+
+The `{slug}-2026-11-06-{holes}.html` and
+`{slug}-2026-11-07-{holes}.html` files were sanitised from complete public
+tee sheets inspected on 5 November 2026. Each retains one available standard
+adult row, plus one excluded-product row where present. Northcote's Saturday
+18-hole fixture retains the verified unfiltered empty-state marker instead.
+
+Sources use the HTTPS path
+`/guests/bookings/ViewPublicTimesheet.msp?bookingResourceId=3000000&selectedDate=YYYY-MM-DD&feeGroupId=ID`:
+
+| Slug | Booking host | 18-hole fee group | 9-hole fee group |
+| --- | --- | --- | --- |
+| northcote | northcotegc.miclub.com.au | 102687 | 102688 |
+| bundoora-park | bundoorapark.miclub.com.au | 102136 | 102137 |
+| growling-frog | growlingfroggc.miclub.com.au | 101495 | 101533 |
+| melton-valley | meltonvalley.miclub.com.au | 102876 | 102877 |
+
+Growling Frog's 18-hole fixtures retain the fee list in the provider's
+`data-content` attribute. The attribute is reconstructed from anonymous fee
+labels and amounts only, preserving the popover parsing contract.

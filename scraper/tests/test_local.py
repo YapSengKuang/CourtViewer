@@ -44,7 +44,7 @@ def blank():
 def test_sanitised_live_source_fixtures(catalog, slug, group_index, fixture, prices):
     course = next(c for c in catalog.courses if c.id == slug)
     group = course.params['fee_groups'][group_index]
-    params = {**course.params, **{k: v for k, v in group.items() if k.endswith('fee_labels')}}
+    params = {**course.params, **{k: v for k, v in group.items() if k.endswith('fee_labels') or k == 'fee_layout'}}
     items = parse_miclub_timesheet((FIXTURES / f'{fixture}.html').read_text(),
         course.model_copy(update={'params': params}), holes=group['holes'],
         booking_url=course.booking_url, now=NOW)
@@ -54,8 +54,75 @@ def test_sanitised_live_source_fixtures(catalog, slug, group_index, fixture, pri
     assert len({i['source_slot_key'] for i in items}) == len(items)
 
 
-def test_all_eight_courses_have_explicit_access_state_and_blocked_sources_make_no_requests(catalog):
-    assert len(catalog.courses) == 8
+@pytest.mark.parametrize(('slug', 'holes', 'day', 'price'), [
+    ('northcote', 18, '2026-11-06', '34.75'),
+    ('northcote', 9, '2026-11-06', '27.00'),
+    ('northcote', 18, '2026-11-07', None),
+    ('northcote', 9, '2026-11-07', '29.50'),
+    ('bundoora-park', 18, '2026-11-06', '40.00'),
+    ('bundoora-park', 9, '2026-11-06', '27.50'),
+    ('bundoora-park', 18, '2026-11-07', '43.60'),
+    ('bundoora-park', 9, '2026-11-07', '28.55'),
+    ('growling-frog', 18, '2026-11-06', '69.00'),
+    ('growling-frog', 9, '2026-11-06', '48.00'),
+    ('growling-frog', 18, '2026-11-07', '69.00'),
+    ('growling-frog', 9, '2026-11-07', '48.00'),
+    ('melton-valley', 18, '2026-11-06', '40.00'),
+    ('melton-valley', 9, '2026-11-06', '30.00'),
+    ('melton-valley', 18, '2026-11-07', '49.00'),
+    ('melton-valley', 9, '2026-11-07', '35.00'),
+])
+def test_alternative_courses_weekday_weekend_and_holes(catalog, slug, holes, day, price):
+    course = next(c for c in catalog.courses if c.id == slug)
+    group = next(g for g in course.params['fee_groups'] if g['holes'] == holes)
+    params = {**course.params, **{k: v for k, v in group.items() if k.endswith('fee_labels') or k == 'fee_layout'}}
+    html = (FIXTURES / f'{slug}-{day}-{holes}.html').read_text()
+    items = parse_miclub_timesheet(html, course.model_copy(update={'params': params}),
+        holes=holes, booking_url=course.booking_url, now=NOW)
+    if price is None:
+        assert items == []  # Verified unfiltered provider empty state.
+    else:
+        assert items and {i['price_per_player'] for i in items} == {price}
+        assert all(i['holes'] == holes and 1 <= i['spots_available'] <= 4 for i in items)
+
+
+@pytest.mark.parametrize(('old', 'new', 'error'), [
+    ('data-html="true"', 'data-html="false"', 'popover'),
+    ('data-content=', 'data-other=', 'popover'),
+    ('fee-applied', 'unknown-fees', 'popover'),
+    ('Adult - Online', 'Unverified Adult Offer', 'public adult price'),
+    ('&lt;/ul&gt;', '&lt;li&gt;Adult - Online $70.00&lt;/li&gt;&lt;/ul&gt;', 'conflicting'),
+])
+def test_growling_popover_changes_fail_closed(catalog, old, new, error):
+    course = next(c for c in catalog.courses if c.id == 'growling-frog')
+    group = next(g for g in course.params['fee_groups'] if g['holes'] == 18)
+    scoped = course.model_copy(update={'params': {**course.params, **group}})
+    html = (FIXTURES / 'growling-frog-2026-11-06-18.html').read_text()
+    assert old in html
+    with pytest.raises(ValueError, match=error):
+        parse_miclub_timesheet(html.replace(old, new), scoped, holes=18,
+                              booking_url=course.booking_url, now=NOW)
+
+
+def test_local_collector_scopes_popover_layout_to_growling_18_holes(catalog):
+    course = next(c for c in catalog.courses if c.id == 'growling-frog')
+    def fetch(url):
+        if 'ViewPublicCalendar' in url:
+            return calendar(course)
+        holes = 18 if 'feeGroupId=101495' in url else 9
+        return (FIXTURES / f'growling-frog-2026-11-06-{holes}.html').read_text()
+    report = collect(CourseCatalog(courses=[course]), blank(), now=NOW,
+        first_date=date(2026, 11, 6), days=1, fetch=fetch)
+    result = report['courses']['growling-frog']
+    assert result['status'] == 'complete'
+    assert {p['tee_times'][0]['price_per_player'] for p in result['partitions'].values()} == {'69.00', '48.00'}
+
+
+def test_enabled_alternatives_and_blocked_sources_have_explicit_access_states(catalog):
+    assert {c.id for c in catalog.courses if c.params['collection_enabled']} == {
+        'club-mandalay', 'morack', 'yarra-bend', 'northcote', 'bundoora-park',
+        'growling-frog', 'melton-valley',
+    }
     blocked = [c for c in catalog.courses if not c.params['collection_enabled']]
     def no_network(url):
         pytest.fail(f'disabled source contacted: {url}')

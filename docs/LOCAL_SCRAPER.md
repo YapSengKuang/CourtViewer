@@ -1,9 +1,10 @@
-# Local eight-course Python scraper
+# Local Python tee-time collector
 
 This local research collector reuses the existing MiClub parser and writes JSON.
 It does not require PostgreSQL, seed courses, publish to the API or change hosted
-jobs. The catalog includes all eight requested courses; only verified accessible
-transports are enabled. Production configuration is unchanged.
+jobs. The catalog enables seven accessible courses, retains the four originally
+blocked sources for diagnostics, and lists Freeway's separate daily integration.
+Production configuration is unchanged.
 
 ## Run
 
@@ -59,6 +60,10 @@ responses are evidence of technical access, not a contractual permission claim.
 | Club Mandalay | Enabled | Existing MiClub adapter, separate 9/18-hole fee groups. |
 | Morack | Enabled | The inspected public calendar offers a 9-hole fee group. Midweek $27 and weekend $30 adult labels were observed; do not infer 18-hole availability. |
 | Yarra Bend | Enabled | MiClub 9/18-hole fee groups. Observed adult off-peak/peak labels, Friday afternoon 9 holes, and the 9-hole back-nine early-bird offer. Separate slots retain their identities. |
+| Northcote | Enabled | MiClub 9/18-hole round groups; weekday adult and weekend 9-hole rates verified. The sampled Saturday 18-hole sheet is explicitly empty. |
+| Bundoora Park | Enabled | MiClub 9/18-hole groups; weekday and weekend adult rates verified. Cart bundles, meal packages and twilight products are excluded. |
+| Growling Frog | Enabled | MiClub 9/18-hole groups; 18-hole public fees are embedded in HTML popovers, while 9-hole fees are inline. Only the configured adult rate is collected. |
+| Melton Valley | Enabled | MiClub 9/18-hole groups; weekday and weekend adult rates verified. Concession and junior products are excluded. |
 | Freeway | Separate daily runner | Existing Quick18 integration requires the cross-host database daily guard. Never contact it from this 15-minute collector. |
 | Glen Waverley | Access blocked | Direct HTTP returned 403; normal browser exposed the JavaScript search, but a verified accessible tee-time transport is still needed. |
 | Malvern Valley | CAPTCHA required | Public calendar enables CAPTCHA. Offers are 2–4-player packages; package totals must not be treated as prices per player. Needs an approved transport and package-aware mapping. |
@@ -102,6 +107,8 @@ responses clear the prior partition; failures preserve old rows and timestamps.
 The collector excludes only explicitly verified nonstandard fee labels; unknown
 prices or changed layouts fail closed. Prices are displayed round rates per
 player, not guaranteed checkout totals. Booking remains on the course website.
+Growling Frog's fee popover is parsed as inert HTML without executing scripts;
+missing popovers, unknown adult labels or conflicting adult prices fail closed.
 
 Requests are serial, at least one second apart per origin, with robots checks,
 20-second request timeouts, no retries, bounded response size, same-origin HTTPS
@@ -136,3 +143,12 @@ provider requests. All 71 scraper tests passed; 22 PostgreSQL-dependent tests
 skipped because PostgreSQL was unavailable. Watch mode started from the saved
 report, displayed the remaining interval without re-fetching, and stopped
 cleanly with Ctrl+C. No collector was left running by this validation.
+
+Alternative-course acceptance on 5 November 2026: a live three-day run completed
+all 24 requested date/fee-group partitions for Northcote (313 offers), Bundoora
+Park (438), Growling Frog (193) and Melton Valley (418): 1,362 offers at capture
+time. The default report now includes seven enabled courses; their existing
+per-course cooldowns still apply. All 93 scraper tests passed, with the same 22
+PostgreSQL-dependent tests skipped. Regression coverage includes 9/18-hole
+weekday/weekend pricing, Northcote's verified empty Saturday 18-hole sheet,
+Growling Frog's two fee layouts, malformed popovers and conflicting adult prices.
