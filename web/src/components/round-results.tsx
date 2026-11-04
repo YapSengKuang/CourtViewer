@@ -121,7 +121,9 @@ export function RoundResults() {
                     const times = slots.filter(slot => slot.course_slug === course.slug);
                     const coverage = data.result.coverage.find(c => c.slug === course.slug);
                     const layout = layoutSlots(times, bounds.start);
-                    const label = coverageLabel(coverage, times.length, players);
+                    const label = holes !== "any" && course.holes_options && !course.holes_options.includes(Number(holes))
+                      ? `${holes}-hole availability isn’t collected for this course.`
+                      : coverageLabel(coverage, times.length, players);
                     return <div className="calendar-course" key={course.slug}>
                       <div className="club-cell" style={{ minHeight: layout.height }}><span className="club-number">{String(index + 1).padStart(2, "0")}</span><h3>{course.name}</h3><span className={coverage?.status === "complete" ? "course-status checked" : "course-status"}>{label}</span></div>
                       <div className="time-track" style={{ height: layout.height }} aria-label={`${course.name}: ${label}`}>

@@ -91,6 +91,7 @@ def list_courses(snapshot=Depends(local_snapshot), now: datetime = Depends(get_n
                 continue
         result.append({
             'slug': course.id, 'name': course.name, 'timezone': course.timezone,
+            'holes_options': course.holes_options,
             'date_from': min(days, default=today), 'date_to': max(days, default=today),
             'refresh_interval_minutes': 15, 'next_scheduled_at': entry.get('next_scheduled_at'),
         })
