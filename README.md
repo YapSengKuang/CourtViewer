@@ -4,7 +4,7 @@ Search available golf tee times. The public beta covers **Club Mandalay and Free
 
 Freeway is collected once daily under the owner-confirmed agreement; normal results expire after 60 minutes. Its [snapshot demo](https://golf-booker-beta.pages.dev/freeway-snapshot) is explicitly historical. See [delivery evidence and remaining F2 acceptance](docs/FREEWAY_DELIVERY_STATUS.md).
 
-Mandalay collection is scheduled every 30 minutes, at minutes 07 and 37 of each hour. GitHub may delay scheduled runs.
+Mandalay's Python collection is scheduled every 15 minutes, at minutes 07, 22, 37 and 52 of each hour. GitHub may delay scheduled runs. The search page shows the next scheduled check in Melbourne time; results become available after collection finishes and users search again. Freeway remains on its separate once-daily schedule.
 
 Booking is not handled here. Each result will deep-link to the course's own booking page.
 

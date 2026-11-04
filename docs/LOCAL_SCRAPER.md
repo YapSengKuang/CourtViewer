@@ -1,7 +1,7 @@
 # Local Python tee-time collector
 
 This local research collector reuses the existing MiClub parser and writes JSON.
-It does not require PostgreSQL, seed courses, publish to the API or change hosted
+It does not require PostgreSQL, seed courses, write to hosted services or change hosted
 jobs. The catalog enables seven accessible courses, retains the four originally
 blocked sources for diagnostics, and lists Freeway's separate daily integration.
 Production configuration is unchanged.
@@ -32,7 +32,7 @@ To install into a new Python 3.11+ virtual environment, install `./db` and
 
 ```bash
 python3.12 -m venv .venv
-.venv/bin/python -m pip install -e ./db -e ./scraper
+.venv/bin/python -m pip install -e ./db -e ./scraper -e ./api
 ```
 
 Select courses or dates for a one-off run:
@@ -49,6 +49,53 @@ the three-day default keeps initial testing small. One-off runs and watch mode
 honour the last attempt in the same output file and avoid rechecking before its
 15-minute due time. Different output files are independent: use one output and
 one scheduling mechanism for regular operation.
+
+## Populate the local frontend
+
+After collecting data, start both the local read API and existing Next.js
+frontend from `web/`:
+
+```bash
+npm run dev:local
+```
+
+Open `http://127.0.0.1:3001`. The helper starts a read-only FastAPI service on
+`127.0.0.1:8001`, points the frontend at it, and clears hosted database settings
+for this process only. Existing environment files and hosted services are not
+changed. Both servers stop with Ctrl+C. The normal `npm run dev` command retains
+its existing configuration.
+
+The API reads `.local/tee-times.json` on every request. It lists the seven enabled
+courses, supports course/date/time/holes/player filters, numeric price sorting
+and pagination, and returns per-course date coverage. Blocked sources and
+Freeway's separate daily collector are excluded from this local preview.
+Rows from failed partitions, malformed scopes, future observation timestamps,
+unsafe booking hosts and observations older than 24 hours are hidden. Missing
+or invalid report files return a clear service-unavailable response without
+falling back to another data source. No database import is needed.
+
+Keep the collector running in a separate terminal for 15-minute updates:
+
+```bash
+.venv/bin/python -m golf_scraper.local --days 3 --watch
+```
+
+After collection completes, submit Search again in the frontend. The web helper
+does not start the collector automatically or scrape during user searches.
+The date picker follows dates present in the local report. For the initial
+5–7 November 2026 data, choose 6 November to try all courses; Growling Frog's
+5 November sheets were verified empty.
+
+For a different report path, set `GOLF_LOCAL_REPORT` before starting the helper.
+For API-only use, run `.venv/bin/python -m uvicorn tee_api.local:app --host 127.0.0.1 --port 8001`
+from the repository root.
+
+Frontend acceptance on 5 November 2026: 15 local API tests and 15 frontend tests
+passed; frontend lint and TypeScript checks passed. Browser verification showed
+seven courses in the picker and Growling Frog's 6 November 18-hole offers for
+two players, including A$69 prices, capacities, observation timestamps and
+provider booking links. The API tests also verify that replacing the collector's
+report changes the next search without a server restart.
 
 ## Course status
 

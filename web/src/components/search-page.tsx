@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { TeeTimeCard } from "@/components/tee-time-card";
+import { CollectionNotice } from "@/components/collection-notice";
 import { fetchCourses, searchAvailability } from "@/lib/api";
 import { todayInputValue } from "@/lib/format";
 import type { CourseChoice, CoverageStatus, HolesChoice, SearchInput, SortChoice, TeeTime } from "@/lib/types";
@@ -83,7 +84,10 @@ export function SearchPage() {
       <header>
         <p className="text-sm font-medium uppercase tracking-wide text-fairway">Golf</p>
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">Tee times</h1>
-        <p className="mt-2 text-muted">Open slots across the courses we watch. Booking stays on the course site.</p>
+        <p className="mt-2 text-muted">Known tee times updated within the last 24 hours. Check availability on the course site when booking.</p>
+        {process.env.NEXT_PUBLIC_LOCAL_PREVIEW === "true"
+          ? <p className="mt-2 text-sm text-muted">Local preview · {courses.length} courses. Results update after collection; search again for the latest saved times.</p>
+          : <CollectionNotice courseSlug={courseSlug} />}
       </header>
 
       <form className="grid grid-cols-1 gap-3 sm:grid-cols-2" onSubmit={onSubmit}>
@@ -133,7 +137,7 @@ export function SearchPage() {
             <option value="price">Currency, then price</option>
           </select>
         </label>
-        <p className="text-sm text-muted sm:col-span-2">Choose today through two weeks ahead. Times are local to each course. Final availability is confirmed on the course website.</p>
+        <p className="text-sm text-muted sm:col-span-2">Choose a date within the available booking window. Times are local to each course. Final availability is confirmed on the course website.</p>
         {selected?.release_note && <p className="text-sm text-muted sm:col-span-2">{selected.release_note}</p>}
         <button
           className="h-11 rounded-full bg-fairway text-sm font-medium text-fairway-ink sm:col-span-2"
@@ -146,12 +150,12 @@ export function SearchPage() {
       <section aria-live="polite" className="flex flex-col gap-3">
         {status === "ready" ? (
           <p className="text-muted">{coverage.length > 0
-            ? `${coverage.filter((course) => course.status === "complete").length} of ${coverage.length} courses have fresh, complete date coverage.`
+            ? `${coverage.filter((course) => course.status === "complete").length} of ${coverage.length} courses have complete date coverage from the last 24 hours.`
             : "Date coverage is unknown. An empty result does not confirm all courses are fully booked."}</p>
         ) : null}
         {status === "ready" && coverage.some((course) => course.status !== "complete") ? (
           <ul className="text-sm text-muted">{coverage.filter((course) => course.status !== "complete").map((course) => (
-            <li key={course.slug}>{course.name}: {course.availability_status === "stale" ? "observations are older than 60 minutes; check the provider for current times" : course.availability_status === "unavailable" ? "source unavailable or unverified for this date" : course.status === "outside_horizon" ? "outside booking horizon" : course.status === "unchecked" ? "not checked for this date" : "partially checked, stale or unavailable"}</li>
+            <li key={course.slug}>{course.name}: {course.availability_status === "stale" ? "last checked more than 24 hours ago" : course.availability_status === "unavailable" ? "source unavailable or unverified for this date" : course.status === "outside_horizon" ? "outside booking horizon" : course.status === "unchecked" ? "not checked for this date" : "partially checked, older than 24 hours or unavailable"}</li>
           ))}</ul>
         ) : null}
         {status === "loading" ? <p className="text-muted">Searching tee times…</p> : null}
