@@ -104,9 +104,10 @@ button:disabled, select:disabled { cursor: wait; opacity: .55; }
 }
 
 /* Centre the starting form in the viewport while navigation stays top-left. */
-.start-shell { position: relative; min-height: 100svh; display: flex; flex-direction: column; padding-bottom: 0; }
+.start-shell { position: relative; width: 100%; max-width: none; min-height: 100svh; display: flex; flex-direction: column; padding: 0; }
 .start-shell > .round-nav { position: absolute; top: 0; left: 40px; right: 40px; }
 .start-content { width: 100%; margin: auto 0; padding: 110px 0; }
 .start-content .compact-hero { padding: 0 0 32px; text-align: center; }
-@media (max-width: 900px) { .start-shell > .round-nav { left: 24px; right: 24px; } }
-@media (max-width: 600px) { .start-shell > .round-nav { left: 18px; right: 18px; } }
+.start-content .round-planner { width: calc(100% - 80px); max-width: 1160px; margin: 0 auto; border-radius: 24px; overflow: hidden; }
+@media (max-width: 900px) { .start-shell > .round-nav { left: 24px; right: 24px; }.start-content .round-planner { width: calc(100% - 48px); } }
+@media (max-width: 600px) { .start-shell > .round-nav { left: 18px; right: 18px; }.start-content .round-planner { width: calc(100% - 36px); } }
