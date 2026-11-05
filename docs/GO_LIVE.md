@@ -60,9 +60,9 @@ both run in CI.
 ## Step 3: hosted schedule
 
 `collect.yml` runs the seven-course publisher at minutes 07, 22, 37 and 52, using
-`GOLF_DATABASE_URL` from GitHub secrets. The first manual run should select
-`prepare_catalog=true`; this seeds metadata without enabling courses publicly.
-The normal schedule does not reseed or migrate. An explicit curated catalog
+`GOLF_DATABASE_URL` from GitHub secrets. An administrator seeds metadata once;
+the restricted scraper account cannot modify course metadata or public flags.
+Neither manual nor scheduled jobs reseed or migrate. An explicit curated catalog
 preflight precedes collection. `GOLF_COLLECTION_ENABLED` remains the stop switch,
 and repository visibility must remain public under the existing cost policy.
 The shared workflow concurrency group and database advisory lock coordinate the
