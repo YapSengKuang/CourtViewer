@@ -56,3 +56,19 @@ The complete Python suite passed against dedicated PostgreSQL: 191 tests with
 no skips. Frontend transport/helper tests: 23 passed. A root pytest configuration
 uses importlib discovery so the API and scraper's `test_local.py` modules can
 both run in CI.
+
+## Step 3: hosted schedule
+
+`collect.yml` runs the seven-course publisher at minutes 07, 22, 37 and 52, using
+`GOLF_DATABASE_URL` from GitHub secrets. The first manual run should select
+`prepare_catalog=true`; this seeds metadata without enabling courses publicly.
+The normal schedule does not reseed or migrate. An explicit curated catalog
+preflight precedes collection. `GOLF_COLLECTION_ENABLED` remains the stop switch,
+and repository visibility must remain public under the existing cost policy.
+The shared workflow concurrency group and database advisory lock coordinate the
+separate daily Freeway workflow. The job has a 15-minute limit; collection's
+source-request budget remains nine minutes. Late or failed runs are recorded as
+such, never presented as a confirmed refresh.
+
+CI runs on the launch branch and pull requests. The static build uses the tested
+Webpack path, avoiding the existing Turbopack CSS worker failure.
