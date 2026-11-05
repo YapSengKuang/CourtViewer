@@ -1,12 +1,12 @@
 # Golf tee time aggregator
 
-The new round planner is available at [the launch preview](https://launch-preview.golf-booker-beta.pages.dev).
+The round planner is live at [golf-booker-beta.pages.dev](https://golf-booker-beta.pages.dev).
 Its seven-course Python collector now publishes 15 dates to the online database;
 Freeway retains its separate daily job. The calendar reads the hosted Supabase
 API. See [the launch record](docs/GO_LIVE.md) for collection, validation and the
-72-hour observation period required before promoting the new frontend.
+ongoing post-launch observation period.
 
-The existing production frontend remains at [golf-booker-beta.pages.dev](https://golf-booker-beta.pages.dev) during preview testing. The public database now includes seven regularly collected clubs plus Freeway. Collection writes Postgres, while user searches only read bounded public database functions.
+The public database includes seven regularly collected clubs plus Freeway. Collection writes Postgres, while user searches only read bounded public database functions. The streamlined planner, dark mode and full-width calendar with page scrolling are deployed. GitHub schedule gaps were observed at launch; the latest manual refresh and public API check passed, and monitoring continues.
 
 Freeway is collected once daily under the owner-confirmed agreement. Search serves future offers observed within the last 24 hours and preserves actual observation timestamps. Its [snapshot demo](https://golf-booker-beta.pages.dev/freeway-snapshot) is explicitly historical. See [delivery evidence and remaining F2 acceptance](docs/FREEWAY_DELIVERY_STATUS.md).
 

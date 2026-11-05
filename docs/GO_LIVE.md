@@ -109,8 +109,10 @@ Preview: https://launch-preview.golf-booker-beta.pages.dev
 Initial preview deployment: `a991602f`, built from `1771f66` with the project's
 public Supabase URL and publishable key. The static build passed with Webpack.
 The previous production frontend remains at https://golf-booker-beta.pages.dev.
-Only the preview is updated during the observation period. Production promotion
-requires the 72-hour review; no custom domain or paid service is introduced.
+The original plan held production promotion for a 72-hour review. The user
+subsequently requested publication on 5 November; the release below supersedes
+that hold. Observation continues after publication. No custom domain or paid
+service is introduced.
 Rollback uses the previous Cloudflare Pages deployment; collection can be
 stopped independently with `GOLF_COLLECTION_ENABLED=false`.
 
@@ -139,10 +141,44 @@ The earlier complete hosted collection remains the initial baseline.
 The earliest 72-hour review is **8 November 2026 at 15:44 AEDT**
 (04:44 UTC). A six-hourly Codex follow-up, `review-golf-launch-observation`, is
 active on this chat. It stays quiet unless there is an actionable change and
-will review actual workflow evidence before production promotion. GitHub runs
+will review actual workflow evidence after production publication. GitHub runs
 collection independently of the laptop; the Codex follow-up needs its execution
 environment available to perform review/promotion. The observation period is
 in progress, not accepted yet.
+
+### Production UI release — 5 November 2026
+
+The user explicitly requested publication before the original observation period
+finished. [PR #4](https://github.com/YapSengKuang/CourtViewer/pull/4) merged as
+`cd78dc1774d2340056bf6721ba8d283d0e893cfd`. Cloudflare Pages production deployment
+`60e91331-3f6d-4c51-84a2-e6d34794e5c3` serves
+https://golf-booker-beta.pages.dev, built from tested UI commit
+`67e5163a0097a478bf39b276c24384193a0d4d81` using the hosted public Supabase
+configuration. The two unrelated local Freeway catalog edits were excluded.
+
+This release adds the streamlined form, supplied palette, saved dark-mode toggle,
+full-width results, windowed tee-time rendering and document vertical scrolling.
+Thirty frontend tests, ESLint, TypeScript and the production static export passed;
+both GitHub Python and frontend jobs passed on the release PR.
+
+Production browser verification submitted tomorrow's two-player/either-holes
+search and displayed 658 offers with eight course rows. The theme toggle worked.
+After page scrolling, the calendar's vertical scroll remained zero, its full
+height was 3,072 px, the time header stayed at viewport top and rendering was
+windowed (255 mounted cards at that viewport). Counts vary with live inventory.
+
+The pre-deploy freshness check found no scheduled run after the successful
+04:57 UTC manual run; this exceeded the 45-minute freshness target. A manual
+refresh [41982067546](https://github.com/YapSengKuang/CourtViewer/actions/runs/41982067546)
+completed successfully at 06:50 UTC. The public API check passed at 07:03 UTC for
+today, tomorrow and day +14, including complete coverage, freshness, pagination,
+prices, booking hosts and access restrictions. See
+`docs/evidence/production-ui-smoke.json`.
+
+The 15-minute workflow remains configured, but reliable scheduled execution has
+not yet been demonstrated. The six-hourly follow-up now monitors post-launch
+health and schedule gaps; it must not redeploy merely because the original
+review deadline arrives. The 72-hour observation is still incomplete.
 
 At the activation check the database was approximately 16.6 MB with 8,765 saved
 offers, below the existing 350 MiB collection stop threshold. The v3 public RPC
