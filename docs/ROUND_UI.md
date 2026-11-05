@@ -56,3 +56,30 @@ styles. Existing Tailwind-based pages retain their global stylesheet.
 
 Run the local preview with `npm run dev:local` from `web/`. It reads the existing
 collector output via the local API; the scraper itself is started separately.
+
+## Local scrolling improvement — 5 November 2026
+
+The calendar now windows tee-time buttons in both directions, keeping a buffered
+area around the scroll viewport. Course labels, row heights, the complete scroll
+range and result counts remain intact. All API pages are still loaded; scrolling
+never requests golf-provider pages. Memoised course grouping and lane layouts
+avoid repeating layout work while scrolling. Passive scroll listeners schedule
+measurements once per animation frame, with quantised bounds to avoid a React
+update for every pixel.
+
+Focused/selected buttons stay mounted. Tab navigation restores the complete
+button sequence before the browser chooses its next focus target; pointer and
+wheel interaction resume windowed rendering. In the narrow local browser, the
+657-offer mixed-hole search initially mounted 55 buttons. Scrolling revealed
+later times and clubs, and a Northcote offer still opened the correct price,
+capacity, timestamp and booking link. Keyboard navigation exposed all 657
+buttons. This measures rendered-card reduction, not a guaranteed frame rate.
+
+Vertical scrolling now belongs to the document: the calendar expands to its full
+row height, with horizontal scrolling retained inside the timeline. Rendering
+bounds follow the calendar's position in the browser viewport, and the time
+header follows page scroll. Browser validation on the 657-offer search measured
+a 2,850 px calendar with equal client/content heights (no nested vertical scroll),
+page scroll at 2,705 px with calendar scrollTop still zero, and a time header at
+the top of the viewport. Later clubs and their cards were visible without page
+horizontal overflow.

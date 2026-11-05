@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchCourses, searchTimelineAvailability } from "@/lib/api";
+import { TeeCalendar } from "@/components/tee-calendar";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { formatPrice, formatTeeTime, formatUpdated } from "@/lib/format";
-import { currentTimelineStart, hourLabel, layoutSlots, PIXELS_PER_MINUTE, resultsUrl, roundDates, SLOT_WIDTH, timelineBounds, type RoundDate } from "@/lib/round-search";
+import { currentTimelineStart, layoutSlots, PIXELS_PER_MINUTE, resultsUrl, roundDates, SLOT_WIDTH, timelineBounds, type RoundDate } from "@/lib/round-search";
 import type { CourseChoice, CoverageStatus, HolesChoice, SearchResult, TeeTime } from "@/lib/types";
 
 function coverageLabel(coverage: CoverageStatus | undefined, count: number, players: number) {
@@ -76,20 +78,37 @@ export function RoundResults() {
     slotButtonRef.current?.focus();
   }
   const startAt = clock === null ? undefined : currentTimelineStart(date, new Date(clock), data?.courses[0]?.timezone ?? "Australia/Melbourne");
-  const slots = status === "ready" && data ? data.result.tee_times.filter(slot =>
-    startAt === undefined || Date.parse(slot.starts_at) >= clock!) : [];
+  const slots = useMemo(() => status === "ready" && data ? data.result.tee_times.filter(slot =>
+    startAt === undefined || Date.parse(slot.starts_at) >= clock!) : [], [status, data, startAt, clock]);
   const bounds = timelineBounds(slots, startAt);
   const width = (bounds.end - bounds.start) * PIXELS_PER_MINUTE + SLOT_WIDTH;
   const hours = [bounds.start, ...Array.from({ length: Math.floor(bounds.end / 60) - Math.floor(bounds.start / 60) },
     (_, i) => (Math.floor(bounds.start / 60) + i + 1) * 60)]
     .filter(hour => hour === bounds.start || hour - bounds.start >= 25);
+  const rows = useMemo(() => {
+    const grouped = new Map<string, TeeTime[]>();
+    for (const slot of slots) {
+      const times = grouped.get(slot.course_slug) ?? [];
+      times.push(slot);
+      grouped.set(slot.course_slug, times);
+    }
+    return (data?.courses ?? []).map(course => {
+      const times = grouped.get(course.slug) ?? [];
+      const coverage = data?.result.coverage.find(c => c.slug === course.slug);
+      const label = holes !== "any" && course.holes_options && !course.holes_options.includes(Number(holes))
+        ? `${holes}-hole availability isn’t collected for this course.`
+        : coverageLabel(coverage, times.length, players);
+      return { slug: course.slug, name: course.name, label, checked: coverage?.status === "complete",
+        layout: layoutSlots(times, bounds.start) };
+    });
+  }, [data, slots, holes, players, bounds.start]);
   const selectedDay = days.find(day => day.value === date);
   const complete = data?.result.coverage.filter(c => c.status === "complete").length ?? 0;
 
   return (
     <main className="round-shell results-shell">
       <nav className="round-nav" aria-label="Main navigation">
-        <Link href="/" className="round-brand"><span className="brand-mark" aria-hidden="true">↗</span> Tee time<span className="brand-dot">.</span></Link>
+        <div className="nav-start"><ThemeToggle /><Link href="/" className="round-brand"><span className="brand-mark" aria-hidden="true">↗</span> Tee time<span className="brand-dot">.</span></Link></div>
         <Link href="/" className="back-link">← Plan another round</Link>
       </nav>
       <header className="results-heading">
@@ -117,35 +136,8 @@ export function RoundResults() {
             : status === "error" ? <div className="results-message" role="alert">The tee-time service is temporarily unavailable. Try Refresh results.</div>
             : data && <>
               {slots.length === 0 && <p className="no-matches">No matching tee times to display. The course rows below show whether this date has been checked.</p>}
-              <div className="tee-calendar" tabIndex={0} role="region" aria-label="Tee-time calendar: time across the top, golf courses down the side. Scroll horizontally for more times.">
-                <div className="calendar-grid" style={{ gridTemplateColumns: `var(--club-column) ${width}px` }}>
-                  <div className="calendar-corner">GOLF COURSE <span>↓</span></div>
-                  <div className="calendar-hours">{hours.map(hour => <span key={hour} style={{ left: (hour - bounds.start) * PIXELS_PER_MINUTE }}>{hourLabel(hour)}</span>)}</div>
-                  {data.courses.map((course, index) => {
-                    const times = slots.filter(slot => slot.course_slug === course.slug);
-                    const coverage = data.result.coverage.find(c => c.slug === course.slug);
-                    const layout = layoutSlots(times, bounds.start);
-                    const label = holes !== "any" && course.holes_options && !course.holes_options.includes(Number(holes))
-                      ? `${holes}-hole availability isn’t collected for this course.`
-                      : coverageLabel(coverage, times.length, players);
-                    return <div className="calendar-course" key={course.slug}>
-                      <div className="club-cell" style={{ minHeight: layout.height }}><span className="club-number">{String(index + 1).padStart(2, "0")}</span><h3>{course.name}</h3><span className={coverage?.status === "complete" ? "course-status checked" : "course-status"}>{label}</span></div>
-                      <div className="time-track" style={{ height: layout.height }} aria-label={`${course.name}: ${label}`}>
-                        {layout.positions.map(({ slot, left, lane }) => <button
-                          type="button" key={`${slot.source_partition}:${slot.source_slot_key}:${slot.holes}`}
-                          className={`tee-slot ${slot.holes === 9 ? "nine" : "eighteen"} ${selected === slot ? "active" : ""}`}
-                          style={{ left, top: lane * 52 + 16, width: SLOT_WIDTH }}
-                          aria-pressed={selected === slot}
-                          aria-label={`${course.name}, ${formatTeeTime(slot.starts_at_local)}, ${slot.holes} holes, ${slot.spots_available} spots, ${formatPrice(slot.price_per_player, slot.currency)} per player`}
-                          onClick={event => { slotButtonRef.current = event.currentTarget; setSelected(slot); }}>
-                          <strong>{formatTeeTime(slot.starts_at_local)}</strong><span>{formatPrice(slot.price_per_player, slot.currency)}</span>
-                        </button>)}
-                        {!times.length && <p className="empty-track">{label}</p>}
-                      </div>
-                    </div>;
-                  })}
-                </div>
-              </div>
+              <TeeCalendar rows={rows} hours={hours} start={bounds.start} width={width} selected={selected}
+                onSelect={(slot, button) => { slotButtonRef.current = button; setSelected(slot); }} />
               <div className="calendar-footer"><span>Select a tee time to view the round and booking details.</span><span>Collected availability · confirmed at booking</span></div>
             </>}
         </section>

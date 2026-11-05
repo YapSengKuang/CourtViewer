@@ -30,6 +30,26 @@ export function slotMinutes(slot: TeeTime): number {
 export const PIXELS_PER_MINUTE = 3;
 export const SLOT_WIDTH = 82;
 
+export type CalendarWindow = { left: number; right: number; top: number; bottom: number };
+
+export function calendarRenderWindow(left: number, top: number, width: number, height: number, clubWidth: number): CalendarWindow {
+  // Quantised bounds avoid React work on every scroll pixel. One extra block
+  // on every side pre-renders cards before they enter the visible area.
+  const block = 256;
+  return {
+    left: Math.max(0, Math.floor(left / block) * block - block),
+    right: Math.ceil((left + Math.max(0, width - clubWidth)) / block) * block + block,
+    top: Math.max(0, Math.floor(top / block) * block - block),
+    bottom: Math.ceil((top + height) / block) * block + block,
+  };
+}
+
+export function calendarPositionVisible(position: { left: number; lane: number }, rowTop: number, window: CalendarWindow): boolean {
+  const top = rowTop + position.lane * 52 + 16;
+  return position.left + SLOT_WIDTH >= window.left && position.left <= window.right
+    && top + 44 >= window.top && top <= window.bottom;
+}
+
 export function currentTimelineStart(date: string, now: Date, timezone: string): number | undefined {
   const parts = new Intl.DateTimeFormat("en-AU", { timeZone: timezone, year: "numeric", month: "2-digit",
     day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);

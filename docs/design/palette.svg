@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="190" viewBox="0 0 1000 190" role="img" aria-labelledby="title desc">
+<title id="title">Tee Time colour palette</title>
+<desc id="desc">Pale Sky BFD7EA, Cool Steel 91AEC1, Air Force Blue 508CA4, Sea Green 0A8754, Dark Spruce 004F2D.</desc>
+<rect x="0" y="0" width="200" height="190" fill="#BFD7EA"/>
+<text x="20" y="125" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#004F2D">#BFD7EA</text>
+<text x="20" y="157" font-family="Arial, sans-serif" font-size="16" fill="#004F2D">Pale Sky</text>
+<rect x="200" y="0" width="200" height="190" fill="#91AEC1"/>
+<text x="220" y="125" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#000000">#91AEC1</text>
+<text x="220" y="157" font-family="Arial, sans-serif" font-size="16" fill="#000000">Cool Steel</text>
+<rect x="400" y="0" width="200" height="190" fill="#508CA4"/>
+<text x="420" y="125" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#000000">#508CA4</text>
+<text x="420" y="157" font-family="Arial, sans-serif" font-size="16" fill="#000000">Air Force Blue</text>
+<rect x="600" y="0" width="200" height="190" fill="#0A8754"/>
+<text x="620" y="125" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">#0A8754</text>
+<text x="620" y="157" font-family="Arial, sans-serif" font-size="16" fill="#FFFFFF">Sea Green</text>
+<rect x="800" y="0" width="200" height="190" fill="#004F2D"/>
+<text x="820" y="125" font-family="Arial, sans-serif" font-size="25" font-weight="700" fill="#FFFFFF">#004F2D</text>
+<text x="820" y="157" font-family="Arial, sans-serif" font-size="16" fill="#FFFFFF">Dark Spruce</text>
+</svg>
