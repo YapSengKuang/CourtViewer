@@ -82,6 +82,8 @@ def parse_miclub_timesheet(
         if not (explicit_empty or provider_empty):
             raise ValueError("timesheet has no recognised rows or verified empty marker")
     groups = {}
+    configured = {label.lower() for label in course.params.get('public_fee_labels', [])}
+    excluded = {label.lower() for label in course.params.get('excluded_fee_labels', [])}
     for row in rows:
         starts_at = _starts_at(row, day, zone)
         row_id = row.attrib.get("data-value")
@@ -95,8 +97,17 @@ def parse_miclub_timesheet(
         spots = len(row.css("div.cell-available"))
         if spots == 0:
             continue  # A recognised sold-out row verifies coverage, not availability.
-        price = _public_price(row, course)
+        fee_labels = _row_fee_labels(row, course)
+        price = _public_price(fee_labels, configured)
         if price is None:
+            # Some public sheets contain rows offering only verified concession
+            # or twilight products. They provide no standard adult offer.
+            labels = {
+                ' '.join(PRICE_RE.sub('', label.lower()).split())
+                for label in fee_labels
+            }
+            if labels and labels <= excluded:
+                continue
             raise ValueError("available row missing public adult price")
         if not (window_start <= starts_at < window_end) or starts_at < now:
             continue
@@ -223,20 +234,39 @@ def _starts_at(row: Selector, day: date, zone: ZoneInfo) -> datetime | None:
     return local.astimezone(timezone.utc)
 
 
-def _public_price(row: Selector, course: CourseSpec) -> str | None:
-    for item in row.css(".fees-wrapper li"):
-        label = " ".join(part.strip() for part in item.css("::text").getall())
+def _row_fee_labels(row: Selector, course: CourseSpec) -> list[str]:
+    if course.params.get('fee_layout') == 'popover':
+        # Growling Frog embeds its public fee list as inert HTML in a popover
+        # attribute. Parse only this configured layout; never execute its HTML.
+        popovers = row.css('.fees-wrapper .fee-applied')
+        if len(popovers) != 1 or popovers[0].attrib.get('data-html') != 'true':
+            raise ValueError('missing or ambiguous fee popover')
+        content = popovers[0].attrib.get('data-content', '')
+        if not content or len(content) > 10000:
+            raise ValueError('missing or oversized fee popover')
+        fees = Selector(text=content).css('ul > li')
+        if not fees:
+            raise ValueError('unrecognised fee popover layout')
+    else:
+        fees = row.css('.fees-wrapper li')
+    return [' '.join(fee.xpath('string(.)').get('').split()) for fee in fees]
+
+
+def _public_price(labels: list[str], configured: set[str]) -> str | None:
+    prices = set()
+    for label in labels:
         lowered = label.lower()
-        configured = course.params.get("public_fee_labels", [])
         fee_label = " ".join(PRICE_RE.sub("", lowered).split())
         if "junior" in lowered or "concession" in lowered:
             continue
         if configured:
-            if fee_label not in [label.lower() for label in configured]:
+            if fee_label not in configured:
                 continue
         elif "public" not in lowered:
             continue
         price = PRICE_RE.search(label)
         if price is not None:
-            return price.group(1)
-    return None
+            prices.add(price.group(1))
+    if len(prices) > 1:
+        raise ValueError('conflicting public adult prices in one booking row')
+    return next(iter(prices), None)

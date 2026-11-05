@@ -3,7 +3,7 @@ name: Collect public tee times
 on:
   workflow_dispatch:
   schedule:
-    - cron: '7,37 * * * *'
+    - cron: '7,22,37,52 * * * *'
 
 permissions:
   contents: read
@@ -18,21 +18,22 @@ jobs:
     # A visibility change or operator stop must fail closed.
     if: github.event.repository.private == false && vars.GOLF_COLLECTION_ENABLED == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - run: python -m pip install -e ./db -e ./scraper
-      - name: Collect verified candidate sources
+      - name: Collect seven verified courses across 15 dates
         env:
           DATABASE_URL: ${{ secrets.GOLF_DATABASE_URL }}
-          COURSES_YAML: scraper/courses.mandalay.yaml
+          COURSES_YAML: scraper/courses.live.yaml
         run: |
           test -n "$DATABASE_URL"
+          python -m golfdb.preflight "$COURSES_YAML"
           python -m golf_scraper.maintenance
-          python -m golf_scraper.run_all
+          python -m golf_scraper.hosted --days 15 --workers 3
 
 # The operator variable must remain true for either scheduled or manual runs.
 # No artifacts, dependency cache, paid runner, or deployment token is used.

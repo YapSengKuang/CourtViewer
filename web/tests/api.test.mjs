@@ -34,7 +34,7 @@ const configured = {
 test('Supabase mode uses bounded RPC arguments and public key', async t => {
   const api = await client(t, configured);
   globalThis.fetch = async (url, options) => {
-    assert.equal(url, 'https://project.supabase.co/rest/v1/rpc/golf_search_v2');
+    assert.equal(url, 'https://project.supabase.co/rest/v1/rpc/golf_search_v3');
     assert.equal(options.method, 'POST');
     assert.equal(options.headers.apikey, 'sb_publishable_test');
     assert.equal(options.headers.Authorization, undefined);
@@ -81,7 +81,7 @@ test('local development retains the FastAPI contract', async t => {
 test('beta search forwards submitted course, sort and page', async t => {
   const api = await client(t, configured);
   globalThis.fetch = async (url, options) => {
-    assert.ok(url.endsWith('/golf_search_v2'));
+    assert.ok(url.endsWith('/golf_search_v3'));
     const args = JSON.parse(options.body);
     assert.equal(args.p_course_slug, 'morack');
     assert.equal(args.p_sort, 'price');
@@ -101,4 +101,32 @@ test('course picker uses bounded public course metadata RPC', async t => {
     return Response.json({ courses: [{ slug: 'morack', date_to: '2026-10-30' }] });
   };
   assert.equal((await api.fetchCourses())[0].date_to, '2026-10-30');
+});
+
+test('timeline loads all result pages so later courses are not silently missing', async t => {
+  const api = await client(t, { NEXT_PUBLIC_API_URL: 'http://localhost:8000' });
+  const offsets = [];
+  globalThis.fetch = async url => {
+    const offset = Number(new URL(url).searchParams.get('offset'));
+    offsets.push(offset);
+    return Response.json({ tee_times: [{ course_slug: offset === 0 ? 'first' : 'last' }],
+      has_more: offset === 0, coverage: [{ slug: 'last', status: 'complete' }] });
+  };
+  const result = await api.searchTimelineAvailability(input);
+  assert.deepEqual(offsets, [0, 100]);
+  assert.deepEqual(result.tee_times.map(t => t.course_slug), ['first', 'last']);
+  assert.equal(result.has_more, false);
+});
+
+test('changing search options stops loading pages for the superseded timeline', async t => {
+  const api = await client(t, { NEXT_PUBLIC_API_URL: 'http://localhost:8000' });
+  let active = true;
+  let calls = 0;
+  globalThis.fetch = async () => {
+    calls++;
+    active = false;
+    return Response.json({ tee_times: [], has_more: true, coverage: [] });
+  };
+  await assert.rejects(api.searchTimelineAvailability(input, () => active), /superseded/);
+  assert.equal(calls, 1);
 });

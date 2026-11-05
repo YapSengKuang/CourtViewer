@@ -1,0 +1,30 @@
+name: Verify hosted calendar
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '13 * * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: hosted-golf-read-checks
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    if: github.event.repository.private == false && vars.GOLF_COLLECTION_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -e ./db
+      - name: Verify public dates, coverage, freshness and access boundaries
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.GOLF_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ vars.GOLF_SUPABASE_PUBLISHABLE_KEY }}
+        run: python scripts/check_live.py

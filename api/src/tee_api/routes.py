@@ -12,7 +12,7 @@ from tee_api.schemas import CourseHealth, CourseList, CourseOut, HealthList, Tee
 
 router = APIRouter(prefix="/api")
 
-FRESH_MINUTES = 60
+OBSERVATION_WINDOW = timedelta(hours=24)
 
 
 def _local_bound(timezone_name: str, day: date, clock: time) -> datetime:
@@ -102,12 +102,12 @@ def search_tee_times(
     if not windows:
         return TeeTimeList(tee_times=[])
 
-    fresh_after = now - timedelta(minutes=FRESH_MINUTES)
+    observed_after = now - OBSERVATION_WINDOW
     statement = (
         select(TeeTime, Course)
         .join(Course, Course.id == TeeTime.course_id)
         .where(TeeTime.spots_available >= players)
-        .where(TeeTime.scraped_at >= fresh_after)
+        .where(TeeTime.scraped_at >= observed_after)
         .where(TeeTime.scraped_at <= now)
         .where(TeeTime.starts_at > now)
         .where(or_(*windows))

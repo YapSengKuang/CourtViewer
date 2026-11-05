@@ -70,7 +70,7 @@ def test_search_uses_each_course_timezone_and_freshness(client, postgres, frozen
             local=datetime(2026, 10, 10, 10, 0, tzinfo=LA),
             spots=4,
             price="70.00",
-            scraped_at=frozen_now - timedelta(minutes=61),
+            scraped_at=frozen_now - timedelta(hours=24, minutes=1),
         )
 
         response = client.get("/api/tee-times", params=SEARCH)
@@ -117,6 +117,19 @@ def test_search_rejects_a_backwards_time_window(client):
         params={**SEARCH, "time_from": "15:00", "time_to": "09:00"},
     )
     assert response.status_code == 422
+
+
+def test_search_keeps_24_hour_observations_but_excludes_older_and_future_ones(client, postgres, frozen_now):
+    factory = session_factory(postgres)
+    try:
+        for hour, age in [(8, timedelta(hours=2)), (9, timedelta(hours=24)),
+                          (10, timedelta(hours=24, microseconds=1)), (11, -timedelta(minutes=1))]:
+            _insert(factory, 'stub-north', local=datetime(2026, 10, 10, hour, 0, tzinfo=LA),
+                    spots=4, price='50.00', scraped_at=frozen_now - age)
+        rows = client.get('/api/tee-times', params=SEARCH).json()['tee_times']
+        assert [row['starts_at_local'][11:16] for row in rows] == ['08:00', '09:00']
+    finally:
+        _cleanup(factory)
 
 
 def test_search_rejects_bad_holes_and_players():

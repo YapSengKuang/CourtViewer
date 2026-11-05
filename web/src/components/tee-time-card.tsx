@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { formatPrice, formatSpots, formatTeeTime, formatUpdated } from "@/lib/format";
 import type { TeeTime } from "@/lib/types";
 
@@ -6,6 +9,13 @@ type TeeTimeCardProps = {
 };
 
 export function TeeTimeCard({ teeTime }: TeeTimeCardProps) {
+  const [updated, setUpdated] = useState("Checking last update time…");
+  useEffect(() => {
+    const update = () => setUpdated(formatUpdated(teeTime.scraped_at, Date.now(), teeTime.timezone));
+    update();
+    const timer = window.setInterval(update, 60000);
+    return () => window.clearInterval(timer);
+  }, [teeTime.scraped_at, teeTime.timezone]);
   const location = teeTime.address ?? "Address not listed yet";
   return (
     <article className="flex flex-col gap-4 rounded-2xl border border-line bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -15,9 +25,9 @@ export function TeeTimeCard({ teeTime }: TeeTimeCardProps) {
         {teeTime.course_slug === "freeway" && <p className="text-sm font-medium">Starting course: {teeTime.source_slot_key.startsWith("1599:") ? "Back 9" : "Freeway"}</p>}
         <p className="text-sm text-muted">{location}</p>
         <p className="mt-2 text-sm text-muted">
-          {teeTime.timezone} · {teeTime.holes} holes · {formatSpots(teeTime.spots_available)} ·{" "}
-          {formatUpdated(teeTime.scraped_at)}
+          {teeTime.timezone} · {teeTime.holes} holes · {formatSpots(teeTime.spots_available)}
         </p>
+        <p className="mt-1 text-sm text-muted"><time dateTime={teeTime.scraped_at}>{updated}</time></p>
       </div>
       <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end">
         <p className="text-xl font-semibold">{formatPrice(teeTime.price_per_player, teeTime.currency)}<span className="block text-sm font-normal text-muted">per player / round</span></p>

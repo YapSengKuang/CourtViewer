@@ -9,6 +9,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full antialiased">
+      <head>
+        {/* Native CSS keeps the planner independent of the Tailwind worker. */}
+        {/* eslint-disable-next-line @next/next/no-css-tags -- static stylesheet shared by the two round-planning routes */}
+        <link rel="stylesheet" href="/round.css" precedence="default" />
+      </head>
       <body className="min-h-full">{children}</body>
     </html>
   );

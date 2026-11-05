@@ -2,7 +2,7 @@ name: Project checks
 
 on:
   push:
-    branches: [main, codex/sprint-1, codex/sprint-2, codex/sprint-3]
+    branches: [main, codex/sprint-1, codex/sprint-2, codex/sprint-3, codex/local-eight-course-scraper]
   pull_request:
   workflow_dispatch:
 

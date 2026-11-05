@@ -24,18 +24,20 @@ export function formatPrice(amount: string, currency: string): string {
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(value);
 }
 
-export function formatUpdated(iso: string | null, now = Date.now()): string {
+export function formatUpdated(iso: string | null, now = Date.now(), timezone = "Australia/Melbourne"): string {
   if (!iso) {
-    return "Not updated yet";
+    return "Last update unknown";
   }
-  const minutes = Math.max(0, Math.round((now - new Date(iso).getTime()) / 60000));
-  if (minutes < 1) {
-    return "Updated just now";
-  }
-  if (minutes === 1) {
-    return "Updated 1 min ago";
-  }
-  return `Updated ${minutes} min ago`;
+  const updated = new Date(iso);
+  if (!Number.isFinite(updated.getTime())) return "Last update unknown";
+  const minutes = Math.max(0, Math.floor((now - updated.getTime()) / 60000));
+  const age = minutes < 1 ? "just now" : minutes < 60 ? `${minutes} min ago`
+    : `${Math.floor(minutes / 60)} hr ago`;
+  const timestamp = new Intl.DateTimeFormat("en-AU", {
+    timeZone: timezone, day: "numeric", month: "short", year: "numeric",
+    hour: "numeric", minute: "2-digit", timeZoneName: "short",
+  }).format(updated);
+  return `Last updated ${timestamp} (${age})`;
 }
 
 export function formatSpots(spots: number): string {
