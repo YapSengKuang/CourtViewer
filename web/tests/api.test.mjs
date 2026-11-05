@@ -34,7 +34,7 @@ const configured = {
 test('Supabase mode uses bounded RPC arguments and public key', async t => {
   const api = await client(t, configured);
   globalThis.fetch = async (url, options) => {
-    assert.equal(url, 'https://project.supabase.co/rest/v1/rpc/golf_search_v2');
+    assert.equal(url, 'https://project.supabase.co/rest/v1/rpc/golf_search_v3');
     assert.equal(options.method, 'POST');
     assert.equal(options.headers.apikey, 'sb_publishable_test');
     assert.equal(options.headers.Authorization, undefined);
@@ -81,7 +81,7 @@ test('local development retains the FastAPI contract', async t => {
 test('beta search forwards submitted course, sort and page', async t => {
   const api = await client(t, configured);
   globalThis.fetch = async (url, options) => {
-    assert.ok(url.endsWith('/golf_search_v2'));
+    assert.ok(url.endsWith('/golf_search_v3'));
     const args = JSON.parse(options.body);
     assert.equal(args.p_course_slug, 'morack');
     assert.equal(args.p_sort, 'price');

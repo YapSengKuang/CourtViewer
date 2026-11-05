@@ -40,3 +40,19 @@ collector and database guard.
 
 The website's Refresh button rereads stored results. It does not start scraping.
 Scheduled check times are targets; observation timestamps show actual data age.
+
+## Step 2: calendar API
+
+Migrations `0006_observation_window` and `0007_round_calendar` carry forward the
+existing 24-hour observation window and add per-partition supported holes.
+`golf_courses` returns `holes_options`; the calendar calls the bounded
+`golf_search_v3` RPC. Its private coverage helper considers only the selected
+hole option, including verified-empty sheets, and unsupported options remain
+explicit. Failed terminal scopes hide retained diagnostic offers; pending work
+does not erase the last successful snapshot. Existing v1/v2 RPCs remain for old
+clients. No direct anonymous table permissions are added.
+
+The complete Python suite passed against dedicated PostgreSQL: 191 tests with
+no skips. Frontend transport/helper tests: 23 passed. A root pytest configuration
+uses importlib discovery so the API and scraper's `test_local.py` modules can
+both run in CI.

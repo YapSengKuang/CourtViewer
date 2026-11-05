@@ -103,7 +103,7 @@ class TeeTimePipeline:
         if course is None:
             raise ValueError(f'unknown course {p.course_slug}')
         self.session.add(ScrapePartition(execution_id=self.execution_id, course_id=course.id,
-            key=p.key, window_start=p.start, window_end=p.end, status='pending'))
+            key=p.key, window_start=p.start, window_end=p.end, status='pending', holes=p.holes))
         if commit:
             self.session.commit()  # Dynamically discovered scopes remain durable.
 

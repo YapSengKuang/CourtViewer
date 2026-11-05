@@ -31,7 +31,7 @@ def availability(db_session):
     start = datetime.combine(day, time(9), ZoneInfo(course.timezone)).astimezone(timezone.utc)
     for owner, clock, age, spots in [
         (course, start, 0, 4),
-        (course, start + timedelta(hours=1), 61, 4),
+        (course, start + timedelta(hours=1), 1441, 4),
         (course, start + timedelta(hours=2), 0, 1),
         (hidden, start, 0, 4),
         (course, now - timedelta(minutes=1), 0, 4),
@@ -100,13 +100,33 @@ def test_public_permissions_and_rls_are_closed_by_default(db_session):
 
 def test_freshness_boundary_is_inclusive(availability):
     session, day = availability
-    session.execute(text('''UPDATE tee_times SET scraped_at = CURRENT_TIMESTAMP - interval '60 minutes'
+    session.execute(text('''UPDATE tee_times SET scraped_at = CURRENT_TIMESTAMP - interval '24 hours'
         WHERE course_id = (SELECT id FROM courses WHERE slug = 'rpc-probe')
-        AND scraped_at < CURRENT_TIMESTAMP - interval '60 minutes' '''))
+        AND scraped_at < CURRENT_TIMESTAMP - interval '24 hours' '''))
     assert len(search(session, day)['tee_times']) == 2
     session.execute(text('''UPDATE tee_times SET scraped_at = scraped_at - interval '1 microsecond'
-        WHERE scraped_at = CURRENT_TIMESTAMP - interval '60 minutes' '''))
+        WHERE scraped_at = CURRENT_TIMESTAMP - interval '24 hours' '''))
     assert len(search(session, day)['tee_times']) == 1
+
+
+@pytest.mark.parametrize('minutes', [61, 120, 1439, 1440])
+def test_both_rpcs_keep_known_observations_for_24_hours(availability, minutes):
+    session, day = availability
+    session.execute(text('''UPDATE tee_times SET scraped_at = CURRENT_TIMESTAMP - make_interval(mins => :minutes)
+        WHERE course_id = (SELECT id FROM courses WHERE slug = 'rpc-probe')'''), {'minutes': minutes})
+    for result in (search(session, day), beta_search(session, day)):
+        assert len(result['tee_times']) == 2
+        assert all(row['starts_at_local'][:10] == day.isoformat() for row in result['tee_times'])
+
+
+@pytest.mark.parametrize('age', ["interval '24 hours 1 microsecond'", "-interval '1 minute'"])
+def test_both_rpcs_exclude_expired_or_future_observation_timestamps(availability, age):
+    session, day = availability
+    # Fixed SQL test cases only; no user-supplied SQL is interpolated.
+    session.execute(text(f'''UPDATE tee_times SET scraped_at = CURRENT_TIMESTAMP - {age}
+        WHERE course_id = (SELECT id FROM courses WHERE slug = 'rpc-probe')'''))
+    assert search(session, day)['tee_times'] == []
+    assert beta_search(session, day)['tee_times'] == []
 
 
 def test_read_only_role_can_call_rpc_but_cannot_read_or_write_tables(availability):
@@ -222,7 +242,7 @@ def test_beta_coverage_distinguishes_partial_from_fresh_empty(availability):
     session.execute(text("UPDATE scrape_partitions SET status='empty' WHERE execution_id=:id"), {'id': execution_id})
     assert beta_search(session, day)['coverage'][0]['status'] == 'complete'
     assert beta_search(session, day)['coverage'][0]['availability_status'] == 'empty'
-    session.execute(text("UPDATE scrape_executions SET started_at = CURRENT_TIMESTAMP - interval '61 minutes' WHERE id=:id"), {'id': execution_id})
+    session.execute(text("UPDATE scrape_executions SET started_at = CURRENT_TIMESTAMP - interval '24 hours 1 minute' WHERE id=:id"), {'id': execution_id})
     assert beta_search(session, day)['coverage'][0]['availability_status'] == 'stale'
 
 

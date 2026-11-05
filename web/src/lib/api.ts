@@ -24,7 +24,7 @@ export async function searchTeeTimes(input: SearchInput): Promise<TeeTime[]> {
 
 export async function searchAvailability(input: SearchInput): Promise<SearchResult> {
   if (SUPABASE_URL || SUPABASE_KEY) {
-    return rpc<SearchResult>("golf_search_v2", {
+    return rpc<SearchResult>("golf_search_v3", {
       p_date: input.date,
       p_time_from: input.timeFrom,
       p_time_to: input.timeTo,

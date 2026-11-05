@@ -142,6 +142,7 @@ class ScrapePartition(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     execution_id: Mapped[str] = mapped_column(ForeignKey("scrape_executions.id", ondelete="CASCADE"), nullable=False)
     course_id: Mapped[int] = mapped_column(ForeignKey("courses.id", ondelete="CASCADE"), nullable=False)
+    holes: Mapped[int | None] = mapped_column(Integer, nullable=True)
     key: Mapped[str] = mapped_column(String(200), nullable=False)
     window_start: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     window_end: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)

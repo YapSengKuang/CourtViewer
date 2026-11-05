@@ -12,6 +12,7 @@ class Partition:
     end: datetime
     status: str = "pending"
     error: str | None = None
+    holes: int | None = None
 
 
 class Coverage:
@@ -19,16 +20,16 @@ class Coverage:
         self.partitions: dict[tuple[str, str], Partition] = {}
         self.on_expect: Callable[[Partition], None] | None = None
 
-    def expect(self, slug: str, key: str, start: datetime, end: datetime) -> Partition:
+    def expect(self, slug: str, key: str, start: datetime, end: datetime, *, holes: int | None = None) -> Partition:
         if not start.tzinfo or not end.tzinfo or start >= end:
             raise ValueError("invalid partition bounds")
         identity = (slug, key)
         if identity in self.partitions:
             existing = self.partitions[identity]
-            if (existing.start, existing.end) != (start, end):
+            if (existing.start, existing.end, existing.holes) != (start, end, holes):
                 raise ValueError("partition bounds changed within execution")
             return existing
-        partition = Partition(slug, key, start, end)
+        partition = Partition(slug, key, start, end, holes=holes)
         self.partitions[identity] = partition
         if self.on_expect:
             self.on_expect(partition)

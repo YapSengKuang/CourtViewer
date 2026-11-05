@@ -68,7 +68,7 @@ def run_hosted(catalog: CourseCatalog, *, days: int = 15, workers: int = 3,
             start = datetime.combine(day, time(), zone).astimezone(timezone.utc)
             end = datetime.combine(day + timedelta(days=1), time(), zone).astimezone(timezone.utc)
             for group in course.params['fee_groups']:
-                coverage.expect(course.id, f"{day}:{group['id']}", start, end)
+                coverage.expect(course.id, f"{day}:{group['id']}", start, end, holes=group['holes'])
     spider = SimpleNamespace(name='hosted_public', course_slugs=[c.id for c in due.courses],
         coverage=coverage, run_started_at=now, course_errors={})
     pipeline = TeeTimePipeline()
