@@ -113,3 +113,15 @@ Only the preview is updated during the observation period. Production promotion
 requires the 72-hour review; no custom domain or paid service is introduced.
 Rollback uses the previous Cloudflare Pages deployment; collection can be
 stopped independently with `GOLF_COLLECTION_ENABLED=false`.
+
+### Hosted browser acceptance
+
+The preview's starting dropdowns navigated to tomorrow's two-player, 18-hole
+calendar and displayed 325 offers across all eight course rows. Bundoora's
+6:00 am offer opened details showing A$40, four spaces, the actual observation
+time and its HTTPS MiClub booking link. Morack correctly displayed
+“18-hole availability isn’t collected for this course.” Switching to today
+started the axis at the current 3:39 pm course-local time; future dates retained
+the 6:00 am start. These are observed values from 5 November, not fixed fixtures.
+Final local regression: 192 Python tests passed against PostgreSQL, none skipped;
+23 frontend tests, lint, TypeScript and the Webpack static export passed.

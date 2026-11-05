@@ -1,5 +1,11 @@
 # Golf tee time aggregator
 
+The new round planner is available at [the launch preview](https://launch-preview.golf-booker-beta.pages.dev).
+Its seven-course Python collector now publishes 15 dates to the online database;
+Freeway retains its separate daily job. The calendar reads the hosted Supabase
+API. See [the launch record](docs/GO_LIVE.md) for collection, validation and the
+72-hour observation period required before promoting the new frontend.
+
 Search available golf tee times. The public beta covers **Club Mandalay and Freeway Golf Course** at [golf-booker-beta.pages.dev](https://golf-booker-beta.pages.dev); Morack and Glen Waverley are follow-up integrations. Collection writes Postgres, while user searches only read bounded public database functions.
 
 Freeway is collected once daily under the owner-confirmed agreement; normal results expire after 60 minutes. Its [snapshot demo](https://golf-booker-beta.pages.dev/freeway-snapshot) is explicitly historical. See [delivery evidence and remaining F2 acceptance](docs/FREEWAY_DELIVERY_STATUS.md).
