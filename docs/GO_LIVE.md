@@ -72,3 +72,44 @@ such, never presented as a confirmed refresh.
 
 CI runs on the launch branch and pull requests. The static build uses the tested
 Webpack path, avoiding the existing Turbopack CSS worker failure.
+
+## Step 4: online validation and observation period
+
+The first hosted seven-course collection succeeded on 5 November 2026:
+[run 41967387057](https://github.com/YapSengKuang/CourtViewer/actions/runs/41967387057).
+All 195 expected date/fee scopes were verified (15 for Morack, 30 for each other
+course). Collection started at 04:22:51 UTC and finished at 04:31:20 UTC, about
+8 minutes 29 seconds. The job including setup took about nine minutes.
+After this verification, the seven course public flags were enabled. The existing
+daily Freeway integration remains enabled separately, making eight public rows.
+
+The first public HTTP smoke check passed at 04:37 UTC: today had 104 offers,
+tomorrow 779 and day +14 had 357 for two players/either holes. Counts are a
+point-in-time observation, not a promise of current inventory. The check verified
+pagination identities, course-local dates, prices, capacity, booking hosts,
+observation timestamps, hole-specific coverage, invalid-input rejection and
+direct anonymous table denial. See `docs/evidence/launch-api-smoke.json`.
+
+`scripts/check_live.py` performs these read-only checks without contacting golf
+providers. `verify-live.yml` runs it hourly using public repository variables
+`GOLF_SUPABASE_URL` and `GOLF_SUPABASE_PUBLISHABLE_KEY`. It also checks that the
+seven regular sources have complete tested-date coverage and observations no
+older than 45 minutes. Freeway has its own daily policy and is excluded from
+that 45-minute check. Pending collection keeps the previous verified coverage
+readable; failed terminal scopes still report failure and hide diagnostic rows.
+
+The 72-hour observation period begins when the updated default-branch schedule
+is active. At acceptance review, inspect scheduled run timestamps, durations,
+failures/skips, health-check runs and current date rollover. A successful manual
+run or deployment is not evidence that 72 hours have elapsed successfully.
+
+## Step 5: website preview and promotion
+
+Preview: https://launch-preview.golf-booker-beta.pages.dev
+Initial preview deployment: `a991602f`, built from `1771f66` with the project's
+public Supabase URL and publishable key. The static build passed with Webpack.
+The previous production frontend remains at https://golf-booker-beta.pages.dev.
+Only the preview is updated during the observation period. Production promotion
+requires the 72-hour review; no custom domain or paid service is introduced.
+Rollback uses the previous Cloudflare Pages deployment; collection can be
+stopped independently with `GOLF_COLLECTION_ENABLED=false`.

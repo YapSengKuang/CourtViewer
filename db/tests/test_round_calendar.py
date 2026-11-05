@@ -42,3 +42,26 @@ def test_calendar_metadata_and_coverage_distinguish_holes_and_failed_scopes(db_s
     course.holes_options = [9]
     session.flush()
     assert session.scalar(query, {**args, 'holes': 18})['coverage'] == []
+
+
+def test_pending_collection_preserves_last_verified_calendar_coverage(db_session):
+    session = db_session
+    session.execute(text('UPDATE courses SET public_enabled = false'))
+    course = Course(slug='pending-probe', name='Pending probe', platform='miclub',
+        timezone='Australia/Melbourne', holes_options=[9], public_enabled=True)
+    session.add(course)
+    session.flush()
+    now = session.scalar(text('SELECT CURRENT_TIMESTAMP'))
+    day = now.astimezone(ZoneInfo(course.timezone)).date() + timedelta(days=1)
+    start = datetime.combine(day, time(), ZoneInfo(course.timezone))
+    for state, age in [('empty', 15), ('pending', 0)]:
+        execution = ScrapeExecution(id=str(uuid4()), spider='test', started_at=now-timedelta(minutes=age), status='running')
+        session.add(execution)
+        session.flush()
+        session.add(ScrapePartition(execution_id=execution.id, course_id=course.id, holes=9,
+            key=f'{day}:9', window_start=start, window_end=start+timedelta(days=1), status=state))
+    session.flush()
+    coverage = session.scalar(text('SELECT public.golf_round_coverage(:day,NULL,9)'), {'day': day})
+    assert coverage[0]['status'] == 'complete'
+    assert coverage[0]['availability_status'] == 'empty'
+    assert datetime.fromisoformat(coverage[0]['observed_at']) == now-timedelta(minutes=15)
