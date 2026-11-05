@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { RoundBrand } from "@/components/round-brand";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchCourses, searchTimelineAvailability } from "@/lib/api";
@@ -108,7 +109,7 @@ export function RoundResults() {
   return (
     <main className="round-shell results-shell">
       <nav className="round-nav" aria-label="Main navigation">
-        <div className="nav-start"><ThemeToggle /><Link href="/" className="round-brand"><span className="brand-mark" aria-hidden="true">↗</span> Tee time<span className="brand-dot">.</span></Link></div>
+        <div className="nav-start"><ThemeToggle /><RoundBrand /></div>
         <Link href="/" className="back-link">← Plan another round</Link>
       </nav>
       <header className="results-heading">

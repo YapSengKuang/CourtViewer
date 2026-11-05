@@ -216,3 +216,12 @@ check all three hole options, today and day +14, loading/errors and the details
 panel; verify keyboard operation, zoom and colour contrast in actual components.
 Keep the source collection, API, availability rules and current-time behaviour
 unchanged by this visual work. A local Git commit is now authorised. Pushes and deployment remain on hold.
+
+## Brand artwork
+
+The user-supplied golf-green illustration is the navigation logo on both the
+starting and results pages: `web/public/branding/tee-time-logo.jpeg`. The second
+landscape illustration is the shared-link preview for Open Graph and Twitter:
+`web/public/branding/tee-time-preview.jpeg`. Both original JPEG files are
+preserved without recolouring or cropping. The logo keeps its white background
+in light and dark themes. The preview is link metadata, not a page background.
