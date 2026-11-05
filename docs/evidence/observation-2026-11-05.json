@@ -1,0 +1,310 @@
+{
+  "checked_at": "2026-11-05T11:39:44.940878+00:00",
+  "dates": [
+    {
+      "date": "2026-11-05",
+      "has_more": false,
+      "coverage": [
+        {
+          "name": "Bundoora Park Golf Course",
+          "slug": "bundoora-park",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Club Mandalay",
+          "slug": "club-mandalay",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Freeway Golf Course",
+          "slug": "freeway",
+          "status": "complete",
+          "checked": 1,
+          "expected": 1,
+          "observed_at": "2026-11-04T17:59:22.279802+00:00",
+          "release_note": "Collected once daily. Showing known slots updated within the last 24 hours. Release timing is unverified; check the provider for later dates.",
+          "availability_status": "available",
+          "refresh_interval_minutes": 1440
+        },
+        {
+          "name": "Growling Frog Golf Course",
+          "slug": "growling-frog",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Melton Valley Golf Club",
+          "slug": "melton-valley",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "available",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Morack Public Golf Course",
+          "slug": "morack",
+          "status": "complete",
+          "checked": 1,
+          "expected": 1,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Northcote Public Golf Course",
+          "slug": "northcote",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Yarra Bend Golf",
+          "slug": "yarra-bend",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        }
+      ]
+    },
+    {
+      "date": "2026-11-06",
+      "has_more": true,
+      "coverage": [
+        {
+          "name": "Bundoora Park Golf Course",
+          "slug": "bundoora-park",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "available",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Club Mandalay",
+          "slug": "club-mandalay",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Freeway Golf Course",
+          "slug": "freeway",
+          "status": "complete",
+          "checked": 1,
+          "expected": 1,
+          "observed_at": "2026-11-04T17:59:22.279802+00:00",
+          "release_note": "Collected once daily. Showing known slots updated within the last 24 hours. Release timing is unverified; check the provider for later dates.",
+          "availability_status": "available",
+          "refresh_interval_minutes": 1440
+        },
+        {
+          "name": "Growling Frog Golf Course",
+          "slug": "growling-frog",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Melton Valley Golf Club",
+          "slug": "melton-valley",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "available",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Morack Public Golf Course",
+          "slug": "morack",
+          "status": "complete",
+          "checked": 1,
+          "expected": 1,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "available",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Northcote Public Golf Course",
+          "slug": "northcote",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "available",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Yarra Bend Golf",
+          "slug": "yarra-bend",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "available",
+          "refresh_interval_minutes": 15
+        }
+      ]
+    },
+    {
+      "date": "2026-11-19",
+      "has_more": true,
+      "coverage": [
+        {
+          "name": "Bundoora Park Golf Course",
+          "slug": "bundoora-park",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Club Mandalay",
+          "slug": "club-mandalay",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "available",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Freeway Golf Course",
+          "slug": "freeway",
+          "status": "incomplete",
+          "checked": 0,
+          "expected": 1,
+          "observed_at": "2026-11-04T17:59:22.279802+00:00",
+          "release_note": "Collected once daily. Showing known slots updated within the last 24 hours. Release timing is unverified; check the provider for later dates.",
+          "availability_status": "unavailable",
+          "refresh_interval_minutes": 1440
+        },
+        {
+          "name": "Growling Frog Golf Course",
+          "slug": "growling-frog",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "available",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Melton Valley Golf Club",
+          "slug": "melton-valley",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Morack Public Golf Course",
+          "slug": "morack",
+          "status": "complete",
+          "checked": 1,
+          "expected": 1,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "available",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Northcote Public Golf Course",
+          "slug": "northcote",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "empty",
+          "refresh_interval_minutes": 15
+        },
+        {
+          "name": "Yarra Bend Golf",
+          "slug": "yarra-bend",
+          "status": "complete",
+          "checked": 2,
+          "expected": 2,
+          "observed_at": "2026-11-05T06:41:34.524632+00:00",
+          "release_note": null,
+          "availability_status": "available",
+          "refresh_interval_minutes": 15
+        }
+      ]
+    }
+  ],
+  "status": "freshness_failed",
+  "smoke_error": "bundoora-park: collection is late",
+  "workflow_state": {
+    "collect": "active",
+    "verify": "active",
+    "default_branch": "main",
+    "collection_enabled": true
+  },
+  "latest_collection": {
+    "id": 41982067546,
+    "event": "workflow_dispatch",
+    "completed_at": "2026-11-05T06:50:30Z"
+  },
+  "latest_scheduled_collection": {
+    "id": 41950437669,
+    "created_at": "2026-11-05T01:43:29Z"
+  },
+  "latest_verification": {
+    "id": 41970992087,
+    "event": "workflow_dispatch",
+    "created_at": "2026-11-05T04:57:47Z"
+  },
+  "provider_collection_triggered": false
+}

@@ -195,3 +195,26 @@ confirmed `/branding/tee-time-logo.png` loaded successfully and the Open Graph
 image points to `/branding/tee-time-preview.jpeg`. The transparent logo appears
 on both page headers through the shared brand component. Unrelated local
 Freeway catalog edits were excluded.
+
+### Observation review — 5 November, 11:39 UTC (22:39 AEDT)
+
+The read-only public smoke test failed the 45-minute freshness target. All seven
+regular clubs still report complete date/fee coverage for today, tomorrow and
+19 November, but observations remain at 06:41 UTC (about five hours old). This
+is coverage from the previous run, not evidence of current inventory. See
+`docs/evidence/observation-2026-11-05.json`. Midnight rollover has not yet been
+observed; the 72-hour acceptance period remains incomplete.
+
+The latest successful collector remains manual run 41982067546, completed at
+06:50 UTC. The latest scheduled collector listed on main is 41950437669, started
+at 01:43 UTC. The hourly verifier has no scheduled runs listed; its latest run
+is the 04:57 UTC manual verification. Both workflows are active, their expected
+cron schedules are present on the public, non-archived repository's default
+branch main, and GOLF_COLLECTION_ENABLED remains true. No queued collector is
+listed. No workflow configuration defect was identified; the cause of missing
+scheduled dispatches remains unresolved. No additional provider scrape, daily
+Freeway run, database mutation or deployment was triggered during this review.
+
+Continue observing scheduled dispatch and freshness. Successful manual collection
+does not resolve scheduler reliability. The website's 15-minute collection
+configuration must not be treated as demonstrated 15-minute updates.
