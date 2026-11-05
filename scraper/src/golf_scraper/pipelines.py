@@ -95,15 +95,17 @@ class TeeTimePipeline:
         self.session.commit()
         self.coverage.on_expect = self._register
         for partition in self.coverage.partitions.values():
-            self._register(partition)
+            self._register(partition, commit=False)
+        self.session.commit()  # All expected scopes are durable before requests.
 
-    def _register(self, p):
+    def _register(self, p, *, commit=True):
         course = self.courses.get(p.course_slug)
         if course is None:
             raise ValueError(f'unknown course {p.course_slug}')
         self.session.add(ScrapePartition(execution_id=self.execution_id, course_id=course.id,
             key=p.key, window_start=p.start, window_end=p.end, status='pending'))
-        self.session.commit()  # Survives worker interruption before any response.
+        if commit:
+            self.session.commit()  # Dynamically discovered scopes remain durable.
 
     def process_item(self, item, spider=None):
         slug = str(item.get('course_slug', ''))
