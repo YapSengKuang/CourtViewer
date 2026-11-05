@@ -6,11 +6,11 @@ Freeway retains its separate daily job. The calendar reads the hosted Supabase
 API. See [the launch record](docs/GO_LIVE.md) for collection, validation and the
 72-hour observation period required before promoting the new frontend.
 
-Search available golf tee times. The public beta covers **Club Mandalay and Freeway Golf Course** at [golf-booker-beta.pages.dev](https://golf-booker-beta.pages.dev); Morack and Glen Waverley are follow-up integrations. Collection writes Postgres, while user searches only read bounded public database functions.
+The existing production frontend remains at [golf-booker-beta.pages.dev](https://golf-booker-beta.pages.dev) during preview testing. The public database now includes seven regularly collected clubs plus Freeway. Collection writes Postgres, while user searches only read bounded public database functions.
 
-Freeway is collected once daily under the owner-confirmed agreement; normal results expire after 60 minutes. Its [snapshot demo](https://golf-booker-beta.pages.dev/freeway-snapshot) is explicitly historical. See [delivery evidence and remaining F2 acceptance](docs/FREEWAY_DELIVERY_STATUS.md).
+Freeway is collected once daily under the owner-confirmed agreement. Search serves future offers observed within the last 24 hours and preserves actual observation timestamps. Its [snapshot demo](https://golf-booker-beta.pages.dev/freeway-snapshot) is explicitly historical. See [delivery evidence and remaining F2 acceptance](docs/FREEWAY_DELIVERY_STATUS.md).
 
-Mandalay's Python collection is scheduled every 15 minutes, at minutes 07, 22, 37 and 52 of each hour. GitHub may delay scheduled runs. The search page shows the next scheduled check in Melbourne time; results become available after collection finishes and users search again. Freeway remains on its separate once-daily schedule.
+The seven-course Python collector is scheduled every 15 minutes, at minutes 07, 22, 37 and 52 of each hour. GitHub may delay scheduled runs. Results become available after collection finishes and users refresh their search. Freeway remains on its separate once-daily schedule.
 
 Booking is not handled here. Each result will deep-link to the course's own booking page.
 
@@ -30,7 +30,7 @@ Booking is not handled here. Each result will deep-link to the course's own book
 
 These documents distinguish verified implementation from proposed work. The historical phase notes below predate the current MiClub adapter and hosted stack; use the linked operations and Sprint 3 documents for current deployment behavior.
 
-Collection covers today through day +14 inclusive (15 local calendar dates). Next.js exports `web/out` for Cloudflare Pages and calls the hosted Supabase read RPCs. The initial deployed catalog is `scraper/courses.mandalay.yaml`; public flags remain operator-controlled. See [Supabase setup](docs/operations/SUPABASE_SETUP.md). Before using a launch catalog, run `python -m golfdb.preflight path/to/catalog.yaml`; the development catalog intentionally fails because it contains synthetic courses.
+Collection covers today through day +14 inclusive (15 local calendar dates). Next.js exports `web/out` for Cloudflare Pages and calls the hosted Supabase read RPCs. The active regular catalog is `scraper/courses.live.yaml`; public flags remain operator-controlled. See [Supabase setup](docs/operations/SUPABASE_SETUP.md). Before using a launch catalog, run `python -m golfdb.preflight path/to/catalog.yaml`; the development catalog intentionally fails because it contains synthetic courses.
 
 ## Layout
 

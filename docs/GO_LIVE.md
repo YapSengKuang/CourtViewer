@@ -125,3 +125,26 @@ started the axis at the current 3:39 pm course-local time; future dates retained
 the 6:00 am start. These are observed values from 5 November, not fixed fixtures.
 Final local regression: 192 Python tests passed against PostgreSQL, none skipped;
 23 frontend tests, lint, TypeScript and the Webpack static export passed.
+
+### Schedule activation and follow-up
+
+PR #3 merged at **2026-11-05 04:44:02 UTC** (15:44 AEDT), merge commit
+`ce76ef789b9e0eb9e2c1d30257b17209708d78cb`. The seven-course collection and hourly
+verification workflows are active on `main`. The first main-branch HTTP check
+[41970992087](https://github.com/YapSengKuang/CourtViewer/actions/runs/41970992087)
+passed. Main-branch collection was dispatched as
+[41970989241](https://github.com/YapSengKuang/CourtViewer/actions/runs/41970989241).
+The earlier complete hosted collection remains the initial baseline.
+
+The earliest 72-hour review is **8 November 2026 at 15:44 AEDT**
+(04:44 UTC). A six-hourly Codex follow-up, `review-golf-launch-observation`, is
+active on this chat. It stays quiet unless there is an actionable change and
+will review actual workflow evidence before production promotion. GitHub runs
+collection independently of the laptop; the Codex follow-up needs its execution
+environment available to perform review/promotion. The observation period is
+in progress, not accepted yet.
+
+At the activation check the database was approximately 16.6 MB with 8,765 saved
+offers, below the existing 350 MiB collection stop threshold. The v3 public RPC
+was callable; direct anonymous table access and the internal coverage helper
+were denied. These are point-in-time checks, not future capacity guarantees.
