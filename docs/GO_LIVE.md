@@ -184,3 +184,14 @@ At the activation check the database was approximately 16.6 MB with 8,765 saved
 offers, below the existing 350 MiB collection stop threshold. The v3 public RPC
 was callable; direct anonymous table access and the internal coverage helper
 were denied. These are point-in-time checks, not future capacity guarantees.
+
+### Branding deployment — 5 November 2026
+
+The user requested production deployment of the logo after PR #5 merged.
+Cloudflare Pages production deployment `a2d374c6` was built from
+`03c505b3177c091b55049c5a28d83efe1d958e87`. The static export and TypeScript
+checks passed. Browser verification on https://golf-booker-beta.pages.dev/
+confirmed `/branding/tee-time-logo.png` loaded successfully and the Open Graph
+image points to `/branding/tee-time-preview.jpeg`. The transparent logo appears
+on both page headers through the shared brand component. Unrelated local
+Freeway catalog edits were excluded.
