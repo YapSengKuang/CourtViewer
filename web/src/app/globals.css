@@ -1,13 +1,18 @@
 @import "tailwindcss";
 
+/* Tokens are also served in round.css for the native planner stylesheet. */
 :root {
-  --background: #f3f0e8;
-  --foreground: #1a2118;
-  --card: #fffcf7;
-  --line: #ddd4c4;
-  --fairway: #1d4a32;
-  --fairway-ink: #f4f1ea;
-  --muted: #5c6658;
+  --background: #F2F7FB;
+  --foreground: #004F2D;
+  --card: #FFFFFF;
+  --line: #91AEC1;
+  --fairway: #0A8754;
+  --fairway-ink: #FFFFFF;
+  --muted: #004F2D;
+  --sky: #BFD7EA;
+  --steel: #91AEC1;
+  --blue: #508CA4;
+  --spruce: #004F2D;
 }
 
 @theme inline {

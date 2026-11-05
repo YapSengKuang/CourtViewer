@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { fetchCourses, searchTimelineAvailability } from "@/lib/api";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { formatPrice, formatTeeTime, formatUpdated } from "@/lib/format";
 import { currentTimelineStart, hourLabel, layoutSlots, PIXELS_PER_MINUTE, resultsUrl, roundDates, SLOT_WIDTH, timelineBounds, type RoundDate } from "@/lib/round-search";
 import type { CourseChoice, CoverageStatus, HolesChoice, SearchResult, TeeTime } from "@/lib/types";
@@ -89,7 +90,7 @@ export function RoundResults() {
   return (
     <main className="round-shell results-shell">
       <nav className="round-nav" aria-label="Main navigation">
-        <Link href="/" className="round-brand"><span className="brand-mark" aria-hidden="true">↗</span> Tee time<span className="brand-dot">.</span></Link>
+        <div className="nav-start"><ThemeToggle /><Link href="/" className="round-brand"><span className="brand-mark" aria-hidden="true">↗</span> Tee time<span className="brand-dot">.</span></Link></div>
         <Link href="/" className="back-link">← Plan another round</Link>
       </nav>
       <header className="results-heading">
@@ -138,7 +139,7 @@ export function RoundResults() {
                           aria-pressed={selected === slot}
                           aria-label={`${course.name}, ${formatTeeTime(slot.starts_at_local)}, ${slot.holes} holes, ${slot.spots_available} spots, ${formatPrice(slot.price_per_player, slot.currency)} per player`}
                           onClick={event => { slotButtonRef.current = event.currentTarget; setSelected(slot); }}>
-                          <strong>{formatTeeTime(slot.starts_at_local)}</strong><span>{formatPrice(slot.price_per_player, slot.currency)}</span>
+                          <strong>{formatTeeTime(slot.starts_at_local)}</strong><span>{formatPrice(slot.price_per_player, slot.currency)} · {slot.holes}h</span>
                         </button>)}
                         {!times.length && <p className="empty-track">{label}</p>}
                       </div>
